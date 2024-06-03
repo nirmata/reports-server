@@ -8,7 +8,7 @@ import (
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/component-base/logs"
 )
-
+// dummy
 func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
