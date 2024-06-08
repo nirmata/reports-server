@@ -98,20 +98,19 @@ helm install reports-server -n reports-server --create-namespace --wait ./charts
 
 To run without cnpg:
 ```bash
-helm install reports-server -n reports-server --create-namespace --wai
-t ./charts/reports-server \
+helm install reports-server -n reports-server --create-namespace --wait ./charts/reports-server \
                              --set image.tag=latest \
                              --set config.db.name=reportsdb
 ```
 NOTE: to check where the reports are stored you can then exec into the postgres pod
 ```bash
-kubectl exec -it reports-server-postgresql-0 -n reports-server -- bash
+kubectl exec -it reports-server-postgresql-0 -n reports-server -- psql -U postgres 
 ```
 then connect to the db
 ```
 \c reportsdb
 ```
-and query for speicifc data. (psql -h database-2.cgfhp1exibuy.us-west-1.rds.amazonaws.com -p 5432 -U postgres # p: r6fhNMa4wZtNzjAoOV1M)
+and query for specific data.
 
 
 ## With inmemory storage
