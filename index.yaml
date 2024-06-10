@@ -2,6 +2,31 @@ apiVersion: v1
 entries:
   reports-server:
   - apiVersion: v2
+    appVersion: v0.1.0-alpha.1-n4k.1
+    created: "2024-06-10T12:29:05.047074843Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 13.4.1
+    digest: 03fc6648a8956d19829a3722641872ac94c9b82bc5c0143fdd64d119508561aa
+    keywords:
+    - kubernetes
+    - policy reports storage
+    - postgresql
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - email: cncf-kyverno-maintainers@lists.cncf.io
+      name: Nirmata
+      url: https://kyverno.io/
+    name: reports-server
+    sources:
+    - https://github.com/nirmata/reports-server
+    type: application
+    urls:
+    - https://nirmata.github.io/reports-server/reports-server-0.1.0-alpha.1-n4k.1.tgz
+    version: 0.1.0-alpha.1-n4k.1
+  - apiVersion: v2
     appVersion: v0.1.0-alpha.1
     created: "2024-02-21T15:54:12.5105694Z"
     dependencies:
@@ -26,3 +51,4 @@ entries:
     urls:
     - https://kyverno.github.io/reports-server/reports-server-0.1.0-alpha.1.tgz
     version: 0.1.0-alpha.1
+generated: "2024-06-10T12:29:05.042141387Z"
