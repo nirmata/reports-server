@@ -10,7 +10,7 @@ cloudnative-pg:
 postgresql:
 
   # -- Deploy postgresql dependency chart
-  enabled: true
+  enabled: false
 
   auth:
 
@@ -167,7 +167,7 @@ service:
 config:
 
   etcd:
-    enabled: false
+    enabled: true
     endpoints: ~
     insecure: true
 
