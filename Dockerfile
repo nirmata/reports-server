@@ -1,5 +1,5 @@
 ARG ARCH
-FROM golang:1.22.2 as build
+FROM golang:1.23.1 as build
 
 WORKDIR /
 COPY . ./
