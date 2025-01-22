@@ -20,7 +20,7 @@ require (
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/gomarkdown/markdown v0.0.0-20230922105210-14b16010c2ee // indirect
+	github.com/gomarkdown/markdown v0.0.0-20240729212818-a2a9c4f76ef5 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
@@ -35,7 +35,7 @@ require (
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/tools v0.16.1 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/gengo v0.0.0-20210813121822-485abfe95c7c // indirect
 	k8s.io/klog/v2 v2.2.0 // indirect
