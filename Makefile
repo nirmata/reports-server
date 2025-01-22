@@ -40,7 +40,7 @@ $(REGISTER_GEN):
 
 $(OPENAPI_GEN):
 	@echo Install openapi-gen... >&2
-	@GOBIN=$(TOOLS_DIR) go install k8s.io/code-generator/cmd/openapi-gen@$(CODE_GEN_VERSION)
+	@GOBIN=$(TOOLS_DIR) go install -mod=readonly -modfile=scripts/go.mod k8s.io/kube-openapi/cmd/openapi-gen
 
 $(KIND):
 	@echo Install kind... >&2
@@ -71,6 +71,7 @@ LOCAL_PLATFORM := linux/$(GOARCH)
 KO_REGISTRY    := ko.local
 KO_CACHE       ?= /tmp/ko-cache
 BIN            := reports-server
+REPO_DIR       :=$(shell pwd)
 ifdef VERSION
 LD_FLAGS       := "-s -w -X $(PACKAGE)/pkg/version.BuildVersion=$(VERSION)"
 else
@@ -139,15 +140,14 @@ codegen-openapi: $(PACKAGE_SHIM) $(OPENAPI_GEN) ## Generate openapi
 		-i k8s.io/apimachinery/pkg/api/resource \
 		-i k8s.io/apimachinery/pkg/apis/meta/v1 \
 		-i k8s.io/apimachinery/pkg/version \
-		-i k8s.io/apimachinery/pkg/runtime \
-		-i k8s.io/apimachinery/pkg/types \
-		-i k8s.io/api/core/v1 \
 		-i sigs.k8s.io/wg-policy-prototypes/policy-report/pkg/api/wgpolicyk8s.io/v1alpha2 \
 		-i github.com/kyverno/kyverno/api/reports/v1 \
 		-i github.com/kyverno/kyverno/api/policyreport/v1alpha2 \
-		-p ./pkg/api/generated/openapi \
+		-p pkg/api/generated/openapi/ \
 		-O zz_generated.openapi \
-		-h ./.hack/boilerplate.go.txt
+		-o $(REPO_DIR) \
+		-h ./scripts/boilerplate.go.txt \
+		-r /dev/null
 
 .PHONY: codegen-helm-docs
 codegen-helm-docs: ## Generate helm docs
