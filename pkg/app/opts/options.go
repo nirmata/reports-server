@@ -161,14 +161,13 @@ func (o Options) ApiserverConfig() (*genericapiserver.Config, error) {
 	}
 
 	versionGet := version.Get()
-	serverConfig.Version = &versionGet
 	// enable OpenAPI schemas
 	serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(generatedopenapi.GetOpenAPIDefinitions, openapinamer.NewDefinitionNamer(api.Scheme))
 	serverConfig.OpenAPIV3Config = genericapiserver.DefaultOpenAPIV3Config(generatedopenapi.GetOpenAPIDefinitions, openapinamer.NewDefinitionNamer(api.Scheme))
 	serverConfig.OpenAPIConfig.Info.Title = "reports-server"
 	serverConfig.OpenAPIV3Config.Info.Title = "reports-server"
-	serverConfig.OpenAPIConfig.Info.Version = strings.Split(serverConfig.Version.String(), "-")[0] // TODO(directxman12): remove this once autosetting this doesn't require security definitions
-	serverConfig.OpenAPIV3Config.Info.Version = strings.Split(serverConfig.Version.String(), "-")[0]
+	serverConfig.OpenAPIConfig.Info.Version = strings.Split(versionGet.String(), "-")[0] // TODO(directxman12): remove this once autosetting this doesn't require security definitions
+	serverConfig.OpenAPIV3Config.Info.Version = strings.Split(versionGet.String(), "-")[0]
 	klog.Info("version", serverConfig.OpenAPIConfig.Info.Version, "v3", serverConfig.OpenAPIV3Config.Info.Version)
 
 	return serverConfig, nil
