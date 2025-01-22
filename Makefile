@@ -20,7 +20,7 @@ REPO_REPORTS_SERVER	?= 	$(REGISTRY)/$(ORG)/$(REPO)
 TOOLS_DIR                          := $(PWD)/.tools
 REGISTER_GEN                       := $(TOOLS_DIR)/register-gen
 OPENAPI_GEN                        := $(TOOLS_DIR)/openapi-gen
-CODE_GEN_VERSION                   := v0.28.0
+CODE_GEN_VERSION                   := v0.29.8
 KIND                               := $(TOOLS_DIR)/kind
 KIND_VERSION                       := v0.23.0
 KO                                 := $(TOOLS_DIR)/ko
@@ -40,7 +40,7 @@ $(REGISTER_GEN):
 
 $(OPENAPI_GEN):
 	@echo Install openapi-gen... >&2
-	@GOBIN=$(TOOLS_DIR) go install k8s.io/code-generator/cmd/openapi-gen@v0.29.8
+	@GOBIN=$(TOOLS_DIR) go install k8s.io/code-generator/cmd/openapi-gen@$(CODE_GEN_VERSION)
 
 $(KIND):
 	@echo Install kind... >&2
