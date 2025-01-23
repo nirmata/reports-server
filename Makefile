@@ -140,6 +140,7 @@ codegen-openapi: $(PACKAGE_SHIM) $(OPENAPI_GEN) ## Generate openapi
 		-i k8s.io/apimachinery/pkg/api/resource \
 		-i k8s.io/apimachinery/pkg/apis/meta/v1 \
 		-i k8s.io/apimachinery/pkg/version \
+		-i k8s.io/api/core/v1 \
 		-i sigs.k8s.io/wg-policy-prototypes/policy-report/pkg/api/wgpolicyk8s.io/v1alpha2 \
 		-i github.com/kyverno/kyverno/api/reports/v1 \
 		-i github.com/kyverno/kyverno/api/policyreport/v1alpha2 \
