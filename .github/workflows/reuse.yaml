@@ -188,7 +188,7 @@ jobs:
       if: ${{ inputs.tag == 'release' || (inputs.tag == 'image' && steps.check-branch.outputs.match == 'true') }}
       env:
         COSIGN_EXPERIMENTAL: "true"
-        COSIGN_REPOSITORY: "ghcr.io/${{ github.repository_owner }}/signatures"
+        COSIGN_REPOSITORY: "ghcr.io/${{ github.repository_owner }}/${{ github.repository }}/signatures"
         digest: ${{ env.digest }}
       run: |
         echo "Signing with digest: $digest"
