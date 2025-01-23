@@ -290,8 +290,7 @@ ko-publish-reports-server: ko-login ## Build and publish reports-server image (w
 	@LD_FLAGS=$(LD_FLAGS) KOCACHE=$(KOCACHE) KO_DOCKER_REPO=$(REPO_REPORTS_SERVER) \
 		$(KO) build . --bare --tags=$(KO_TAGS) --platform=$(PLATFORMS)
 
-REPORTS_SERVER_FIPS     := reports-server-fips
-REPO_REPORTS_SERVER_FIPS := $(REGISTRY)/$(ORG)/$(REPORTS_SERVER_FIPS)
+
 
 ##################################
 # FIPS VARIABLES
@@ -299,11 +298,15 @@ REPO_REPORTS_SERVER_FIPS := $(REGISTRY)/$(ORG)/$(REPORTS_SERVER_FIPS)
 FIPS_ENABLED := 0 # Default to FIPS disabled
 
 ifeq ($(FIPS_ENABLED), 1)
-IMAGE_TAG    := $(shell git describe --tags --abbrev=0)
+# IMAGE_TAG    := $(shell git describe --tags --abbrev=0)
+IMAGE_TAG    := "amit-fips"
 BUILD_TAGS   :="fips" 
 LD_FLAGS     :="-s -w"
 CGO_ENABLED  := 1
 endif
+
+REPORTS_SERVER_FIPS     := reports-server-fips
+REPO_REPORTS_SERVER_FIPS := $(REGISTRY)/$(ORG)/$(REPORTS_SERVER_FIPS)
 
 ##################################
 # KYVERNO FIPS CONTAINER
