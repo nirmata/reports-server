@@ -318,7 +318,7 @@ docker-build-and-push-reports-server-fips: docker-buildx-builder
 	@docker buildx build --file $(PWD)/Dockerfile.fips \
 		--progress plain \
 		--platform linux/amd64 \
-		--tag $(REPO_REPORTS_SERVER_FIPS)$(IMAGE_TAG) \
+		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
 		. \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
 		--push
