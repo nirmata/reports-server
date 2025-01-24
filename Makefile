@@ -289,3 +289,39 @@ ko-login: $(KO)
 ko-publish-reports-server: ko-login ## Build and publish reports-server image (with ko)
 	@LD_FLAGS=$(LD_FLAGS) KOCACHE=$(KOCACHE) KO_DOCKER_REPO=$(REPO_REPORTS_SERVER) \
 		$(KO) build . --bare --tags=$(KO_TAGS) --platform=$(PLATFORMS)
+
+
+##################################
+# FIPS VARIABLES
+##################################
+FIPS_ENABLED := 0 # Default to FIPS disabled
+
+ifeq ($(FIPS_ENABLED), 1)
+# IMAGE_TAG    := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "latest")
+IMAGE_TAG      := $(shell git describe --tags --abbrev=0)
+IMAGE_TAG := "amit-fips"
+endif
+
+##################################
+# KYVERNO FIPS CONTAINER
+##################################
+.PHONY: docker-build-and-push-reports-server-fips
+docker-buildx-builder:
+	if ! docker buildx ls | grep -q reports-server-fips; then \
+		docker buildx create --name reports-server-fips --use; \
+	else \
+		docker buildx use reports-server-fips; \
+	fi
+
+docker-publish-reports-server-fips: docker-buildx-builder docker-build-and-push-reports-server-fips
+docker-build-and-push-reports-server-fips: docker-buildx-builder
+	@docker buildx build --file $(PWD)/Dockerfile.fips \
+		--progress plain \
+		--platform linux/amd64,linux/arm64 \
+		--tag $(REPO_REPORTS_SERVER_FIPS)$(IMAGE_TAG) \
+		. \
+		--build-arg LD_FLAGS=$(LD_FLAGS) \
+		--push
+
+docker-get-reports-server-digest:
+	@docker buildx imagetools inspect --raw $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) | perl -pe 'chomp if eof' | openssl dgst -sha256 | sed 's/^.* //'
