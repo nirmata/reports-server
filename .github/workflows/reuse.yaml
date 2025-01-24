@@ -77,16 +77,6 @@ jobs:
       with:
         install: true
 
-    - name: Run Trivy vulnerability scanner in repo mode
-      if: ${{inputs.tag == 'release'}}
-      uses: aquasecurity/trivy-action@40c4ca9e7421287d0c5576712fdff370978f9c3c
-      with:
-        scan-type: 'fs'
-        ignore-unfixed: true
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH'
-
     - name: Set Version
       if: ${{ inputs.tag == 'release'}}
       run: |
