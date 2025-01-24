@@ -298,8 +298,7 @@ ko-publish-reports-server: ko-login ## Build and publish reports-server image (w
 FIPS_ENABLED := 0 # Default to FIPS disabled
 
 ifeq ($(FIPS_ENABLED), 1)
-# IMAGE_TAG    := $(shell git describe --tags --abbrev=0)
-IMAGE_TAG    := "amit-fips"
+IMAGE_TAG    := $(shell git describe --tags --abbrev=0)
 BUILD_TAGS   :="fips" 
 LD_FLAGS     :="-s -w"
 CGO_ENABLED  := 1
@@ -331,9 +330,7 @@ docker-build-and-push-reports-server-fips: docker-buildx-builder
 		--platform linux/amd64,linux/arm64 \
 		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
 		. \
-		--build-arg BUILD_TAGS=$(BUILD_TAGS) \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
-		--build-arg MAIN_FILE=./ \
 		--push
 
 docker-get-reports-server-digest:
