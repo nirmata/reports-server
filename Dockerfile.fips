@@ -7,7 +7,6 @@ ENV GOPATH=/go \
 
 RUN mkdir -p /go && \
     tdnf install -y \
-        gcc gcc-c++ \
         ca-certificates \
         build-essential \
         shadow-utils && \
