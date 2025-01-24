@@ -330,9 +330,7 @@ docker-build-and-push-reports-server-fips: docker-buildx-builder
 		--platform linux/amd64,linux/arm64 \
 		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
 		. \
-		--build-arg BUILD_TAGS=$(BUILD_TAGS) \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
-		--build-arg MAIN_FILE=./ \
 		--push
 
 docker-get-reports-server-digest:
