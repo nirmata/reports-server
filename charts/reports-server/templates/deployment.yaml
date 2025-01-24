@@ -86,6 +86,15 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: tmp-dir
+          {{- $tag := default .Values.image.tag .Chart.AppVersion -}}
+          {{- $imageRegistry := default .Values.image.registry "" -}}
+          {{- $repository := required "An image repository is required" .Values.image.repository -}}
+          {{- $fipsEnabled := .Values.fipsEnabled | default false -}}
+          {{- if $fipsEnabled -}}
+            {{ $imageRegistry }}/{{ $repository }}-fips:{{ $tag }}
+          {{- else -}}
+            {{ $imageRegistry }}/{{ $repository }}:{{ $tag }}
+          {{- end -}}
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
