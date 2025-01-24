@@ -298,9 +298,7 @@ FIPS_ENABLED := 0 # Default to FIPS disabled
 
 ifeq ($(FIPS_ENABLED), 1)
 IMAGE_TAG    := $(shell git describe --tags --abbrev=0)
-BUILD_TAGS   :="fips" 
 LD_FLAGS     :="-s -w"
-CGO_ENABLED  := 1
 endif
 
 REPORTS_SERVER_FIPS     := reports-server-fips
@@ -321,12 +319,21 @@ docker-buildx-builder:
 reports-server-fips: fmt vet
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) go build ./ -o $(PWD)/$(REPO_REPORTS_SERVER_FIPS) -tags "$(BUILD_TAGS)" -ldflags="$(LD_FLAGS)" $(PWD)/
 
-docker-publish-reports-server-fips: docker-buildx-builder docker-build-and-push-reports-server-fips
+docker-publish-reports-server-fips: docker-buildx-builder docker-build-and-push-reports-server-fips-amd64 docker-build-and-push-reports-server-fips-arm64
 
-docker-build-and-push-reports-server-fips: docker-buildx-builder
+docker-build-and-push-reports-server-fips-amd64: docker-buildx-builder
 	@docker buildx build --file $(PWD)/Dockerfile.fips \
 		--progress plain \
-		--platform linux/amd64,linux/arm64 \
+		--platform linux/amd64 \
+		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
+		. \
+		--build-arg LD_FLAGS=$(LD_FLAGS) \
+		--push
+
+docker-build-and-push-reports-server-fips-arm64: docker-buildx-builder
+	@docker buildx build --file $(PWD)/Dockerfile.fips \
+		--progress plain \
+		--platform linux/arm64 \
 		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
 		. \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
