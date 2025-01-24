@@ -298,8 +298,8 @@ FIPS_ENABLED := 0 # Default to FIPS disabled
 
 ifeq ($(FIPS_ENABLED), 1)
 # IMAGE_TAG    := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "latest")
-IMAGE_TAG      := $(shell git describe --tags --abbrev=0)
-IMAGE_TAG := "amit-fips"
+IMAGE_TAG      :=$(shell git describe --tags --abbrev=0)
+IMAGE_TAG :="amit-fips"
 endif
 
 ##################################
@@ -318,7 +318,7 @@ docker-build-and-push-reports-server-fips: docker-buildx-builder
 	@docker buildx build --file $(PWD)/Dockerfile.fips \
 		--progress plain \
 		--platform linux/amd64 \
-		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
+		--tag $(REPO_REPORTS_SERVER_FIPS)$(IMAGE_TAG) \
 		. \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
 		--push
