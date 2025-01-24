@@ -187,5 +187,5 @@ jobs:
     - name: Attach SBOM
       if: ${{inputs.tag == 'release'}}
       env:
-        COSIGN_REPOSITORY: "ghcr.io/${{ github.repository_owner }}/sbom"
-      run: cosign attach sbom --sbom ./${{inputs.image_name}}-v*-bom.cdx.json --type cyclonedx  ghcr.io/${{ github.repository_owner }}/${{ github.repository }}/${{inputs.image_name}}@sha256:${{ env.digest }}
+        COSIGN_REPOSITORY: "ghcr.io/${{ github.repository_owner }}/${{ github.repository }}/sbom"
+      run: cosign attach sbom --sbom ./${{inputs.image_name}}-v*-bom.cdx.json --type cyclonedx  ghcr.io/${{ github.repository_owner }}/${{inputs.image_name}}@sha256:${{ env.digest }}
