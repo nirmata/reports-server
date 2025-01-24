@@ -297,14 +297,19 @@ ko-publish-reports-server: ko-login ## Build and publish reports-server image (w
 FIPS_ENABLED := 0 # Default to FIPS disabled
 
 ifeq ($(FIPS_ENABLED), 1)
-# IMAGE_TAG    := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "latest")
-IMAGE_TAG      :=$(shell git describe --tags --abbrev=0)
-IMAGE_TAG :="amit-fips"
+IMAGE_TAG    := $(shell git describe --tags --abbrev=0)
+BUILD_TAGS   :="fips" 
+LD_FLAGS     :="-s -w"
+CGO_ENABLED  := 1
 endif
+
+REPORTS_SERVER_FIPS     := reports-server-fips
+REPO_REPORTS_SERVER_FIPS := $(REGISTRY)/$(ORG)/$(REPORTS_SERVER_FIPS)
 
 ##################################
 # KYVERNO FIPS CONTAINER
 ##################################
+
 .PHONY: docker-build-and-push-reports-server-fips
 docker-buildx-builder:
 	if ! docker buildx ls | grep -q reports-server-fips; then \
@@ -313,12 +318,16 @@ docker-buildx-builder:
 		docker buildx use reports-server-fips; \
 	fi
 
+reports-server-fips: fmt vet
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) go build ./ -o $(PWD)/$(REPO_REPORTS_SERVER_FIPS) -tags "$(BUILD_TAGS)" -ldflags="$(LD_FLAGS)" $(PWD)/
+
 docker-publish-reports-server-fips: docker-buildx-builder docker-build-and-push-reports-server-fips
+
 docker-build-and-push-reports-server-fips: docker-buildx-builder
 	@docker buildx build --file $(PWD)/Dockerfile.fips \
 		--progress plain \
-		--platform linux/amd64 \
-		--tag $(REPO_REPORTS_SERVER_FIPS)$(IMAGE_TAG) \
+		--platform linux/amd64,linux/arm64 \
+		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
 		. \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
 		--push
