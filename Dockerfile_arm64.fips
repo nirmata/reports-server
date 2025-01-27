@@ -5,9 +5,13 @@ ENV GOPATH=/go \
     CGO_ENABLED=1 \
     FIPS_ENABLED=1
 
+RUN tdnf search gcc
+
 RUN mkdir -p /go && \
     tdnf install -y \
         gcc gcc-c++ \
+        gcc-aarch64-linux-gnu \
+        openssl openssl-devel \
         ca-certificates \
         build-essential \
         shadow-utils && \
@@ -18,8 +22,8 @@ COPY . .
 
 ARG LD_FLAGS
 
-ARG TARGETARCH
-RUN GOOS=linux GOARCH=$TARGETARCH \
+RUN CC=aarch64-linux-gnu-gcc \
+    GOOS=linux GOARCH=$TARGETARCH \
     BUILD_TAGS=fips GOEXPERIMENT=systemcrypto \
     CGO_ENABLED=1 FIPS_ENABLED=1 \
     go build -ldflags="-s -w" -o /app/reports-server ./
