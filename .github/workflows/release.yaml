@@ -18,22 +18,7 @@ jobs:
       id-token: write
     uses: ./.github/workflows/reuse.yaml
     with:
-      publish_command: docker-publish-reports-server-fips-amd
-      digest_command: docker-get-reports-server-digest
-      image_name: reports-server-fips
-      tag: release
-      main: ./
-    secrets:
-      registry_username: ${{ github.actor }}
-      registry_password: ${{ secrets.GITHUB_TOKEN }}
-  release-reports-server-arm:
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    uses: ./.github/workflows/reuse.yaml
-    with:
-      publish_command: docker-publish-reports-server-fips-arm
+      publish_command: docker-publish-reports-server-fips
       digest_command: docker-get-reports-server-digest
       image_name: reports-server-fips
       tag: release

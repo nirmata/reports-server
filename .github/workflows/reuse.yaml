@@ -51,13 +51,6 @@ jobs:
     - name: Install Cosign
       uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
 
-    # - name: Cache Go modules
-    #   uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-    #   with:
-    #     path: ~/go/pkg/mod
-    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-go-
     - name: Log into ghcr.io
       uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
       with:

@@ -319,23 +319,12 @@ docker-buildx-builder:
 reports-server-fips: fmt vet
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) go build ./ -o $(PWD)/$(REPO_REPORTS_SERVER_FIPS) -tags "$(BUILD_TAGS)" -ldflags="$(LD_FLAGS)" $(PWD)/
 
-docker-publish-reports-server-fips-amd: docker-buildx-builder docker-build-and-push-reports-server-fips-amd64 
-
-docker-publish-reports-server-fips-arm: docker-buildx-builder docker-build-and-push-reports-server-fips-arm64
+docker-publish-reports-server-fips-amd: docker-buildx-builder docker-build-and-push-reports-server-fips
 
 docker-build-and-push-reports-server-fips-amd64: docker-buildx-builder
-	@docker buildx build --file $(PWD)/Dockerfile_amd64.fips \
+	@docker buildx build --file $(PWD)/Dockerfile.fips \
 		--progress plain \
-		--platform linux/amd64 \
-		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
-		. \
-		--build-arg LD_FLAGS=$(LD_FLAGS) \
-		--push
-
-docker-build-and-push-reports-server-fips-arm64: docker-buildx-builder
-	@docker buildx build --file $(PWD)/Dockerfile_arm64.fips \
-		--progress plain \
-		--platform linux/arm64 \
+		--platform linux/amd64,linux/arm64 \
 		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
 		. \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
