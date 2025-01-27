@@ -40,6 +40,7 @@ jobs:
       main: ./
     secrets:
       registry_username: ${{ github.actor }}
+      registry_password: ${{ secrets.GITHUB_TOKEN }}
   # goreleaser:
   #   permissions:
   #     contents: write
