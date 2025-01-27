@@ -289,3 +289,57 @@ ko-login: $(KO)
 ko-publish-reports-server: ko-login ## Build and publish reports-server image (with ko)
 	@LD_FLAGS=$(LD_FLAGS) KOCACHE=$(KOCACHE) KO_DOCKER_REPO=$(REPO_REPORTS_SERVER) \
 		$(KO) build . --bare --tags=$(KO_TAGS) --platform=$(PLATFORMS)
+
+
+##################################
+# FIPS VARIABLES
+##################################
+FIPS_ENABLED := 0 # Default to FIPS disabled
+
+ifeq ($(FIPS_ENABLED), 1)
+IMAGE_TAG    := $(shell git describe --tags --abbrev=0)
+LD_FLAGS     :="-s -w"
+endif
+
+REPORTS_SERVER_FIPS     := reports-server-fips
+REPO_REPORTS_SERVER_FIPS := $(REGISTRY)/$(ORG)/$(REPORTS_SERVER_FIPS)
+
+##################################
+# KYVERNO FIPS CONTAINER
+##################################
+
+.PHONY: docker-build-and-push-reports-server-fips
+docker-buildx-builder:
+	if ! docker buildx ls | grep -q reports-server-fips; then \
+		docker buildx create --name reports-server-fips --use; \
+	else \
+		docker buildx use reports-server-fips; \
+	fi
+
+reports-server-fips: fmt vet
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) go build ./ -o $(PWD)/$(REPO_REPORTS_SERVER_FIPS) -tags "$(BUILD_TAGS)" -ldflags="$(LD_FLAGS)" $(PWD)/
+
+docker-publish-reports-server-fips-amd: docker-buildx-builder docker-build-and-push-reports-server-fips-amd64 
+
+docker-publish-reports-server-fips-arm: docker-buildx-builder docker-build-and-push-reports-server-fips-arm64
+
+docker-build-and-push-reports-server-fips-amd64: docker-buildx-builder
+	@docker buildx build --file $(PWD)/Dockerfile_amd64.fips \
+		--progress plain \
+		--platform linux/amd64 \
+		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
+		. \
+		--build-arg LD_FLAGS=$(LD_FLAGS) \
+		--push
+
+docker-build-and-push-reports-server-fips-arm64: docker-buildx-builder
+	@docker buildx build --file $(PWD)/Dockerfile_arm64.fips \
+		--progress plain \
+		--platform linux/arm64 \
+		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
+		. \
+		--build-arg LD_FLAGS=$(LD_FLAGS) \
+		--push
+
+docker-get-reports-server-digest:
+	@docker buildx imagetools inspect --raw $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) | perl -pe 'chomp if eof' | openssl dgst -sha256 | sed 's/^.* //'
