@@ -5,7 +5,7 @@ ENV GOPATH=/go \
     CGO_ENABLED=1 \
     FIPS_ENABLED=1
 
-RUN mkdir /go && \
+RUN mkdir -p /go && \
     tdnf install -y \
         ca-certificates \
         build-essential \
