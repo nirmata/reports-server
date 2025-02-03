@@ -305,7 +305,7 @@ REPORTS_SERVER_FIPS     := reports-server-fips
 REPO_REPORTS_SERVER_FIPS := $(REGISTRY)/$(ORG)/$(REPORTS_SERVER_FIPS)
 
 ##################################
-# KYVERNO FIPS CONTAINER
+# REPORTS-SERVER FIPS CONTAINER
 ##################################
 
 .PHONY: docker-build-and-push-reports-server-fips
