@@ -23,7 +23,7 @@ on:
         required: true
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: xr1
     permissions:
       contents: read
       packages: write

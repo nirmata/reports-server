@@ -13,7 +13,6 @@ on:
 
 jobs:
   release-reports-server:
-    runs-on: xr1
     permissions:
       contents: read
       packages: write
