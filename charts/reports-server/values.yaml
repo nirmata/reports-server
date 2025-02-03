@@ -2,7 +2,7 @@
 # @ignored
 templating:
   enabled: false
-
+fipsEnabled: false
 cloudnative-pg:
   crds:
     create: false
