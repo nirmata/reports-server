@@ -5,7 +5,7 @@ ENV GOPATH=/go \
     CGO_ENABLED=1 \
     FIPS_ENABLED=1
 
-RUN mkdir -p /go && \
+RUN mkdir /go && \
     tdnf install -y \
         ca-certificates \
         build-essential \
@@ -21,7 +21,7 @@ ARG TARGETARCH
 RUN GOOS=linux GOARCH=$TARGETARCH \
     BUILD_TAGS=fips GOEXPERIMENT=systemcrypto \
     CGO_ENABLED=1 FIPS_ENABLED=1 \
-    go build -ldflags="-s -w" -o /app/reports-server ./
+    go build -p 1 -ldflags="-s -w" -o /app/reports-server ./
 
 RUN groupadd --system appgroup && \
     useradd --system --uid 1001 --gid appgroup --home-dir /nonexistent --shell /usr/sbin/nologin appuser && \
