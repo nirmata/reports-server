@@ -9,6 +9,7 @@ RUN mkdir -p /go && \
     tdnf install -y \
         ca-certificates \
         build-essential \
+        gcc \
         shadow-utils && \
     tdnf clean all
 
