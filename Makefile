@@ -342,7 +342,7 @@ docker-build-and-push-reports-server-fips-arm64: docker-buildx-builder
 		--push
 
 # Build both architectures separately
-docker-build-and-push-reports-server-fips: docker-build-and-push-reports-server-fips-amd64 docker-build-and-push-reports-server-fips-arm64
+docker-build-and-push-reports-server-fips: docker-build-and-push-reports-server-fips-arm64 docker-build-and-push-reports-server-fips-amd64
 
 
 docker-get-reports-server-digest:
