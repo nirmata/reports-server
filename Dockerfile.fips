@@ -8,6 +8,7 @@ ENV GOPATH=/go \
 RUN mkdir -p /go && \
     tdnf install -y \
         ca-certificates \
+        build-essential \
         shadow-utils && \
     tdnf clean all
 
