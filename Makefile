@@ -319,16 +319,29 @@ docker-buildx-builder:
 reports-server-fips: fmt vet
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) go build ./ -o $(PWD)/$(REPO_REPORTS_SERVER_FIPS) -tags "$(BUILD_TAGS)" -ldflags="$(LD_FLAGS)" $(PWD)/
 
-docker-publish-reports-server-fips: docker-buildx-builder docker-build-and-push-reports-server-fips
+# Build both architectures separately
+docker-build-and-push-reports-server-fips: docker-build-and-push-reports-server-fips-amd64 docker-build-and-push-reports-server-fips-arm64
 
-docker-build-and-push-reports-server-fips: docker-buildx-builder
+d# Build and push FIPS-compliant reports-server for AMD64
+docker-build-and-push-reports-server-fips-amd64: docker-buildx-builder
 	@docker buildx build --file $(PWD)/Dockerfile.fips \
 		--progress plain \
-		--platform linux/amd64,linux/arm64 \
-		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
+		--platform linux/amd64 \
+		--tag $(REPO_REPORTS_SERVER_FIPS)-amd64:$(IMAGE_TAG) \
 		. \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
 		--push
+
+# Build and push FIPS-compliant reports-server for ARM64
+docker-build-and-push-reports-server-fips-arm64: docker-buildx-builder
+	@docker buildx build --file $(PWD)/Dockerfile.fips \
+		--progress plain \
+		--platform linux/arm64 \
+		--tag $(REPO_REPORTS_SERVER_FIPS)-arm64:$(IMAGE_TAG) \
+		. \
+		--build-arg LD_FLAGS=$(LD_FLAGS) \
+		--push
+
 
 docker-get-reports-server-digest:
 	@docker buildx imagetools inspect --raw $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) | perl -pe 'chomp if eof' | openssl dgst -sha256 | sed 's/^.* //'
