@@ -29,6 +29,57 @@ jobs:
       packages: write
       id-token: write
     steps:
+        - name: Detect Runner Architecture
+      run: |
+        ARCH=$(uname -m)
+        echo "Detected architecture: $ARCH"
+        echo "ARCH=$ARCH" >> $GITHUB_ENV
+
+    - name: Print Disk & Memory Usage (Before Cleanup)
+      run: |
+        echo "==== Disk Usage Before Cleanup ($ARCH) ===="
+        df -h
+        echo "==== Memory Usage Before Cleanup ($ARCH) ===="
+        free -h
+        echo "==== Docker Disk Usage Before Cleanup ($ARCH) ===="
+        docker system df
+
+    - name: Cleanup Space on Runner
+      run: |
+        echo "Running cleanup for $ARCH..."
+        
+        # Remove unnecessary packages
+        sudo apt-get autoremove -y
+        sudo apt-get clean
+
+        # Remove dangling Docker images & containers
+        docker system prune -af --volumes
+
+        # Remove cached Go modules
+        go clean -modcache
+
+        # Remove unnecessary system logs
+        sudo journalctl --vacuum-time=1s
+
+        # Remove npm cache (if applicable)
+        rm -rf ~/.npm
+        rm -rf ~/.cache
+
+        # Extra cleanup for ARM64 (if needed)
+        if [[ "$ARCH" == "aarch64" ]]; then
+          echo "Applying additional cleanup for ARM64..."
+          # Add ARM64-specific cleanup commands here if needed
+        fi
+
+    - name: Print Disk & Memory Usage (After Cleanup)
+      run: |
+        echo "==== Disk Usage After Cleanup ($ARCH) ===="
+        df -h
+        echo "==== Memory Usage After Cleanup ($ARCH) ===="
+        free -h
+        echo "==== Docker Disk Usage After Cleanup ($ARCH) ===="
+        docker system df
+
     - name: Checkout release
       if: ${{ inputs.tag == 'release'}}
       uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.4.0
