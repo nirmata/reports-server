@@ -321,29 +321,14 @@ reports-server-fips: fmt vet
 
 docker-publish-reports-server-fips: docker-buildx-builder docker-build-and-push-reports-server-fips
 
-# Build and push FIPS-compliant reports-server for AMD64
-docker-build-and-push-reports-server-fips-amd64: docker-buildx-builder
+docker-build-and-push-reports-server-fips: docker-buildx-builder
 	@docker buildx build --file $(PWD)/Dockerfile.fips \
 		--progress plain \
-		--platform linux/amd64 \
+		--platform linux/amd64,linux/arm64 \
 		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
 		. \
 		--build-arg LD_FLAGS=$(LD_FLAGS) \
 		--push
-
-# Build and push FIPS-compliant reports-server for ARM64
-docker-build-and-push-reports-server-fips-arm64: docker-buildx-builder
-	@docker buildx build --file $(PWD)/Dockerfile.fips \
-		--progress plain \
-		--platform linux/arm64 \
-		--tag $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) \
-		. \
-		--build-arg LD_FLAGS=$(LD_FLAGS) \
-		--push
-
-# Build both architectures separately
-docker-build-and-push-reports-server-fips: docker-build-and-push-reports-server-fips-arm64 docker-build-and-push-reports-server-fips-amd64
-
 
 docker-get-reports-server-digest:
 	@docker buildx imagetools inspect --raw $(REPO_REPORTS_SERVER_FIPS):$(IMAGE_TAG) | perl -pe 'chomp if eof' | openssl dgst -sha256 | sed 's/^.* //'
