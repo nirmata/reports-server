@@ -224,9 +224,9 @@ apiServicesManagement:
 
   image:
     # -- (string) Image registry
-    registry: ~
+    registry: reg.nirmata.io
     # -- Image repository
-    repository: reg.nirmata.io/nirmata/kubectl
+    repository: nirmata/kubectl
     # -- Image tag
     # Defaults to `latest` if omitted
     tag: '1.30.2'
