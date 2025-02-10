@@ -29,7 +29,7 @@ replicaCount: 1
 
 image:
   # -- Image registry
-  registry: ghcr.io
+  registry: reg.nirmata.io
   # -- Image repository
   repository: nirmata/reports-server
   # -- Image pull policy
@@ -224,9 +224,9 @@ apiServicesManagement:
 
   image:
     # -- (string) Image registry
-    registry: reg.nirmata.io
+    registry: docker.io
     # -- Image repository
-    repository: nirmata/kubectl
+    repository: bitnami/kubectl
     # -- Image tag
     # Defaults to `latest` if omitted
     tag: '1.30.2'
