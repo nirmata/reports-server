@@ -30,7 +30,7 @@ helm install reports-server --namespace reports-server --create-namespace report
 | nameOverride | string | `""` | Name override |
 | fullnameOverride | string | `""` | Full name override |
 | replicaCount | int | `1` | Number of pod replicas |
-| image.registry | string | `"ghcr.io"` | Image registry |
+| image.registry | string | `"reg.nirmata.io"` | Image registry |
 | image.repository | string | `"nirmata/reports-server"` | Image repository |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | image.tag | string | `nil` | Image tag (will default to app version if not set) |
@@ -83,9 +83,9 @@ helm install reports-server --namespace reports-server --create-namespace report
 | apiServicesManagement.installApiServices | object | `{"enabled":false,"installEphemeralReportsService":true}` | Install api services in manifest |
 | apiServicesManagement.installApiServices.enabled | bool | `false` | Store reports in reports-server |
 | apiServicesManagement.installApiServices.installEphemeralReportsService | bool | `true` | Store ephemeral reports in reports-server |
-| apiServicesManagement.image.registry | string | `nil` | Image registry |
-| apiServicesManagement.image.repository | string | `"reg.nirmata.io/nirmata/kubectl"` | Image repository |
-| apiServicesManagement.image.tag | string | `"1.32.1"` | Image tag Defaults to `latest` if omitted |
+| apiServicesManagement.image.registry | string | `"ghcr.io"` | Image registry |
+| apiServicesManagement.image.repository | string | `"nirmata/kubectl"` | Image repository |
+| apiServicesManagement.image.tag | string | `"1.30.2"` | Image tag Defaults to `latest` if omitted |
 | apiServicesManagement.image.pullPolicy | string | `nil` | Image pull policy Defaults to image.pullPolicy if omitted |
 | apiServicesManagement.imagePullSecrets | list | `[]` | Image pull secrets |
 | apiServicesManagement.podSecurityContext | object | `{}` | Security context for the pod |
