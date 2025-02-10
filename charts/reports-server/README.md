@@ -83,9 +83,9 @@ helm install reports-server --namespace reports-server --create-namespace report
 | apiServicesManagement.installApiServices | object | `{"enabled":false,"installEphemeralReportsService":true}` | Install api services in manifest |
 | apiServicesManagement.installApiServices.enabled | bool | `false` | Store reports in reports-server |
 | apiServicesManagement.installApiServices.installEphemeralReportsService | bool | `true` | Store ephemeral reports in reports-server |
-| apiServicesManagement.image.registry | string | `"docker.io"` | Image registry |
-| apiServicesManagement.image.repository | string | `"bitnami/kubectl"` | Image repository |
-| apiServicesManagement.image.tag | string | `"1.30.2"` | Image tag Defaults to `latest` if omitted |
+| apiServicesManagement.image.registry | string | `nil` | Image registry |
+| apiServicesManagement.image.repository | string | `"reg.nirmata.io/nirmata/kubectl"` | Image repository |
+| apiServicesManagement.image.tag | string | `"1.32.1"` | Image tag Defaults to `latest` if omitted |
 | apiServicesManagement.image.pullPolicy | string | `nil` | Image pull policy Defaults to image.pullPolicy if omitted |
 | apiServicesManagement.imagePullSecrets | list | `[]` | Image pull secrets |
 | apiServicesManagement.podSecurityContext | object | `{}` | Security context for the pod |
