@@ -225,7 +225,7 @@ apiServicesManagement:
   image:
     # -- (string) Image registry
     # -- (string) Image registry
-    registry: reg.nirmata.io
+    registry: ghcr.io
     # -- Image repository
     repository: nirmata/kubectl
     # -- Image tag
