@@ -59,8 +59,8 @@ spec:
                   - etcd-reports-server
               topologyKey: "kubernetes.io/hostname"
       containers:
-      - name: etcd
-        image: reg.nirmata.io/nirmata/etcd:v3.5.18-cve-free
+      name: etcd
+        image: quay.io/coreos/etcd:v3.5.15
         imagePullPolicy: IfNotPresent
         ports:
         - name: etcd-client
