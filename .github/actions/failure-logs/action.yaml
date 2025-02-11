@@ -17,3 +17,4 @@ runs:
     run: |
       kubectl -n reports-server logs deploy/reports-server --all-containers
       kubectl -n reports-server logs statefulset/etcd --all-containers
+      kubectl -n reports-server logs job/reports-server-post-install-install-api-services
