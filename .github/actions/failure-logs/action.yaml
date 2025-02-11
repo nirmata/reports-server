@@ -16,4 +16,4 @@ runs:
   - shell: bash
     run: |
       kubectl -n reports-server logs deploy/reports-server --all-containers
-      kubectl -n reports-server logs deploy/etcd --all-containers
+      kubectl -n reports-server logs statefulset/etcd --all-containers
