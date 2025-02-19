@@ -2,9 +2,6 @@ name: Create Publish and Sign Docker Image for FIPS Compliance
 on:
   workflow_call:
     inputs:
-      tag:
-        required: true
-        type: string
       main:
         type: string
     secrets:
