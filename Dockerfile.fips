@@ -10,7 +10,6 @@ RUN mkdir -p /go && \
         ca-certificates \
         build-essential \
         openssl-devel \
-        gcc \
         shadow-utils && \
     tdnf clean all
 
