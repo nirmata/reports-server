@@ -1,4 +1,4 @@
-defaultBaseImage: jigarjoshinirmata/wrapper-fips-nonroot-user:v6.0
+defaultBaseImage: mcr.microsoft.com/cbl-mariner/distroless/base:2.0-nonroot
 
 builds:
 - id: reports-server-fips
