@@ -292,7 +292,7 @@ ko-publish-reports-server: ko-login ## Build and publish reports-server image (w
 
 
 .PHONY: ko-publish-reports-server-fips
-ko-publish-reports-server-fips: # ko-login ## Build and publish reports-server image (with ko)
+ko-publish-reports-server-fips: ko-login ## Build and publish reports-server image (with ko)
 	@LD_FLAGS=$(LD_FLAGS) KOCACHE=$(KOCACHE) KO_DOCKER_REPO=$(REPO_REPORTS_SERVER)-fips  KO_CONFIG_PATH=.ko.yaml\
 		$(KO) build . --bare --tags=$(KO_TAGS) --platform=$(PLATFORMS)
 
