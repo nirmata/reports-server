@@ -297,6 +297,28 @@ ko-publish-reports-server-fips: ko-login ## Build and publish reports-server ima
 		$(KO) build . --bare --tags=$(KO_TAGS) --platform=$(PLATFORMS)
 
 
+DOCKER_IMAGE_TAG := ms-image-to-publish-ko-images
+
+.PHONY: fips-base-image-docker-build
+fips-base-image-docker-build:
+	@echo "Building Docker image: $(DOCKER_IMAGE_TAG)"
+	docker build -t $(DOCKER_IMAGE_TAG) -f Dockerfile.fips .
+
+
+.PHONY: ko-publish-reports-server-fips
+ko-publish-reports-server-fips: fips-base-image-docker-build ## Build and publish kyverno image (with ko and FIPS)
+	docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -w /app \
+          -e KO_DOCKER_REPO=$(REPO_REPORTS_SERVER)-fips \
+          -e KO_TAGS=$(KO_TAGS) \
+		  -e KOCACHE=$(KOCACHE) \
+          -e KO_CONFIG_PATH=.ko.yaml \
+		  -e REGISTRY=$(REGISTRY) \
+		  -e REGISTRY_USERNAME=$(REGISTRY_USERNAME) \
+		  -e REGISTRY_PASSWORD=$(REGISTRY_PASSWORD) \
+          $(DOCKER_IMAGE_TAG)
+
 ##################################
 # FIPS VARIABLES
 ##################################
