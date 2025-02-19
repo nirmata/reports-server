@@ -39,6 +39,21 @@ jobs:
       id: publish-reports-server
       uses: ./.github/actions/publish-image
       with:
+        makefile-target: ko-publish-reports-server
+        registry: ghcr.io
+        registry-username: ${{ github.actor }}
+        registry-password: ${{ secrets.GITHUB_TOKEN }}
+        repository: reports-server
+        version: ${{ github.ref_name }}
+        sign-image: true
+        sbom-name: reports-server
+        sbom-repository: ghcr.io/${{ github.repository_owner }}/reports-server/sbom
+        signature-repository: ghcr.io/${{ github.repository_owner }}/reports-server/signatures
+        main-path: .
+    - name: Publish reports server FIPS
+      id: publish-reports-server-fips
+      uses: ./.github/actions/publish-image
+      with:
         makefile-target: ko-publish-reports-server-fips
         registry: ghcr.io
         registry-username: ${{ github.actor }}
