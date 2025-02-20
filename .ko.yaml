@@ -1,4 +1,4 @@
-defaultBaseImage: mcr.microsoft.com/cbl-mariner/distroless/base:2.0-nonrootBUILD_TAGS
+defaultBaseImage: mcr.microsoft.com/cbl-mariner/distroless/base:2.0-nonroot
 
 builds:
 - id: reports-server-fips
