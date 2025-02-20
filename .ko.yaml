@@ -1,15 +1,1 @@
-defaultBaseImage: jigarjoshinirmata/wrapper-fips-nonroot-user:v6.0
 
-builds:
-- id: reports-server-fips
-  main: .
-  ldflags:
-  - '{{ if index .Env "LD_FLAGS" }}{{ .Env.LD_FLAGS }}{{ end }}'
-  flags:
-  - -tags
-  - fips
-  - -BUILD_TAGS=fips
-  - -GOEXPERIMENT=systemcrypto
-  - -CGO_ENABLED=1
-
-# TODO: export a variable and print in the code to check if that is picked up or not

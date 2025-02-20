@@ -5,6 +5,7 @@ set -e
 echo "DEBUG: Registry: $REGISTRY"
 echo "DEBUG: Username: $REGISTRY_USERNAME"
 echo "DEBUG: KO Tags: $KO_TAGS"
+echo "DEBUG: KO Config Path: $KO_CONFIG_PATH"
 echo "DEBUG: DIR: ${DIR:-not set}"
 
 # Login to container registry

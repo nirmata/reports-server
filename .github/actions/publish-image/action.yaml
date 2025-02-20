@@ -36,6 +36,9 @@ inputs:
   main-path:
     required: true
     description: path to main go entry point
+  ko-config-path:
+    required: true
+    description: path to ko config file
 
 outputs:
   digest:
@@ -53,6 +56,7 @@ runs:
       REGISTRY_USERNAME: ${{ inputs.registry-username }}
       REGISTRY_PASSWORD: ${{ inputs.registry-password }}
       COSIGN_REPOSITORY: ${{ inputs.sbom-repository }}
+      KO_CONFIG_PATH: ${{ inputs.ko-config-path }}
     run: |
       set -e
       OUTPUT=$(VERSION=${{ inputs.version }} make ${{ inputs.makefile-target }} | tee /dev/stderr)
