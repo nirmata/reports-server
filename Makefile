@@ -308,12 +308,12 @@ ko-publish-reports-server-fips: fips-base-image-docker-build ## Build and publis
           -w /app \
           -e KO_DOCKER_REPO=$(REPO_REPORTS_SERVER)-fips \
           -e KO_TAGS=$(KO_TAGS) \
-		  -e KOCACHE=$(KOCACHE) \
-          -e KO_CONFIG_PATH=.ko.yaml \
-		  -e REGISTRY=$(REGISTRY) \
-		  -e REGISTRY_USERNAME=$(REGISTRY_USERNAME) \
-		  -e REGISTRY_PASSWORD=$(REGISTRY_PASSWORD) \
-          $(DOCKER_IMAGE_TAG)
+					-e KOCACHE=$(KOCACHE) \
+					-e KO_CONFIG_PATH=$(KO_CONFIG_PATH) \
+					-e REGISTRY=$(REGISTRY) \
+					-e REGISTRY_USERNAME=$(REGISTRY_USERNAME) \
+					-e REGISTRY_PASSWORD=$(REGISTRY_PASSWORD) \
+							$(DOCKER_IMAGE_TAG)
 
 ##################################
 # FIPS VARIABLES
