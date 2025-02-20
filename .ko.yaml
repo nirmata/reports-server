@@ -8,5 +8,8 @@ builds:
   flags:
   - -tags
   - fips
+  - -BUILD_TAGS=fips
+  - -GOEXPERIMENT=systemcrypto
+  - -CGO_ENABLED=1
 
 # TODO: export a variable and print in the code to check if that is picked up or not
