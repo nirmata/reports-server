@@ -30,9 +30,9 @@ jobs:
       continue-on-error: true
       with:
         build-cache-key: publish-images
-    - name: Setup build env
-      uses: ./.github/actions/setup-build-env
-      timeout-minutes: 30
+    # - name: Setup build env
+    #   uses: ./.github/actions/setup-build-env
+    #   timeout-minutes: 30
     - name: Install Cosign
       uses: sigstore/cosign-installer@e1523de7571e31dbe865fd2e80c5c7c23ae71eb4 # v3.4.0
     - name: Publish reports server
