@@ -6,7 +6,6 @@ FROM mcr.microsoft.com/oss/go/microsoft/golang:1.23.6-fips-cbl-mariner2.0
 RUN tdnf install -y \
     ca-certificates \
     git \
-    gcc \
     initscripts && \
     tdnf clean all
 
