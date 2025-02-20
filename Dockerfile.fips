@@ -1,44 +1,24 @@
-FROM mcr.microsoft.com/oss/go/microsoft/golang:1.23.6-fips-cbl-mariner2.0 AS builder
+# Dockerfile that will be used to install ko and further on ko creates images from this docker
+# While using this dockerfile you must mount external docker here, as that is required for KO to work
+FROM mcr.microsoft.com/oss/go/microsoft/golang:1.23.6-fips-cbl-mariner2.0
 
-ENV GOPATH=/go \
-    PATH=/usr/local/go/bin:/go/bin:/usr/local/bin:/usr/bin:$PATH \
-    CGO_ENABLED=1 \
-    FIPS_ENABLED=1
-
-RUN mkdir -p /go && \
-    tdnf install -y \
-        ca-certificates \
-        build-essential \
-        openssl-devel \
-        gcc \
-        shadow-utils && \
+# Install dependencies: we no longer need moby-engine since host has Docker
+RUN tdnf install -y \
+    ca-certificates \
+    git \
+    initscripts && \
     tdnf clean all
+
+# Install 'ko' with a pinned version
+ENV KO_VERSION=v0.17.1
+ENV CGO_ENABLED=1
+
+# Install ko CLI and move it to /usr/local/bin
+RUN go install github.com/google/ko@${KO_VERSION}
 
 WORKDIR /app
 COPY . .
 
-ARG LD_FLAGS
+RUN chmod +x entrypoint.sh
 
-ARG TARGETARCH
-RUN GOOS=linux GOARCH=$TARGETARCH \
-    BUILD_TAGS=fips GOEXPERIMENT=systemcrypto \
-    CGO_ENABLED=1 FIPS_ENABLED=1 \
-    go build -p 1  -ldflags="-s -w" -o /app/reports-server ./
-
-RUN groupadd --system appgroup && \
-    useradd --system --uid 1001 --gid appgroup --home-dir /nonexistent --shell /usr/sbin/nologin appuser && \
-    chown appuser:appgroup /app/reports-server
-
-FROM mcr.microsoft.com/cbl-mariner/distroless/base:2.0-nonroot
-
-COPY --from=builder /etc/passwd /etc/passwd
-
-COPY --from=builder /etc/group /etc/group
-
-COPY --from=builder /app/reports-server /reports-server
-
-COPY --from=builder /etc/ssl/certs /etc/ssl/certs
-
-USER 1001
-
-ENTRYPOINT ["/reports-server"]
+ENTRYPOINT ["./entrypoint.sh"]
