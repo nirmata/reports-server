@@ -1,4 +1,4 @@
-defaultBaseImage: mcr.microsoft.com/cbl-mariner/distroless/base:2.0-nonroot
+defaultBaseImage: jigarjoshinirmata/wrapper-fips-nonroot-user:v6.0
 
 builds:
 - id: reports-server-fips
@@ -7,8 +7,6 @@ builds:
   - '{{ if index .Env "LD_FLAGS" }}{{ .Env.LD_FLAGS }}{{ end }}'
   flags:
   - -tags
-  - fips
-  - -BUILD_TAGS
   - fips
 
 # TODO: export a variable and print in the code to check if that is picked up or not
