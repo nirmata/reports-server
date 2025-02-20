@@ -8,6 +8,9 @@ echo "DEBUG: KO Tags: $KO_TAGS"
 echo "DEBUG: KO Config Path: $KO_CONFIG_PATH"
 echo "DEBUG: DIR: ${DIR:-not set}"
 
+echo "Printing go env vars"
+go env
+
 # Login to container registry
 echo "Logging into registry $REGISTRY..."
 ko login "$REGISTRY" --username "$REGISTRY_USERNAME" --password "$REGISTRY_PASSWORD"
