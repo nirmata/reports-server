@@ -195,7 +195,7 @@ verify-codegen: codegen ## Verify all generated code and docs are up to date
 ########
 
 KIND_IMAGE     ?= kindest/node:v1.30.0
-KIND_NAME      ?= three-node-cluster
+KIND_NAME      ?= kind
 ETCD_STORAGE_SIZE ?= 8Gi
 
 .PHONY: kind-create
@@ -221,110 +221,6 @@ kind-install: $(HELM) kind-load ## Build image, load it in kind cluster and depl
 		--set image.repository=$(PACKAGE) \
 		--set image.tag=$(GIT_SHA) \
 		--set config.etcd.storage=$(ETCD_STORAGE_SIZE)
-
-#########################################################################
-# Targets without reports-server tolerations (only etcd settings)
-#########################################################################
-
-.PHONY: kind-install-node-selector-no-rs
-kind-install-node-selector-no-rs: $(HELM) kind-load
-	@echo "Installing chart with etcd nodeSelector only (no reports-server tolerations)..." >&2
-	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set image.repository=$(PACKAGE) \
-		--set image.tag=$(GIT_SHA) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set nodeSelector.disktype=ssd
-
-.PHONY: kind-install-node-selector-no-rs
-kind-install-node-selector-only-rs: $(HELM) kind-load
-	@echo "Installing chart with etcd nodeSelector only (no reports-server tolerations)..." >&2
-	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set image.repository=$(PACKAGE) \
-		--set image.tag=$(GIT_SHA) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set config.etcd.nodeSelector.disktype=ssd
-
-.PHONY: kind-install-tolerations-no-rs
-kind-install-tolerations-no-rs: $(HELM) kind-load
-	@echo "Installing chart with etcd tolerations only (no reports-server tolerations)..." >&2
-	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set image.repository=$(PACKAGE) \
-		--set image.tag=$(GIT_SHA) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set "config.etcd.tolerations[0].key=example-key" \
-		--set "config.etcd.tolerations[0].operator=Equal" \
-		--set "config.etcd.tolerations[0].value=example-value" \
-		--set "config.etcd.tolerations[0].effect=NoSchedule"
-
-.PHONY: kind-install-both-no-rs
-kind-install-both-no-rs: $(HELM) kind-load
-	@echo "Installing chart with both etcd nodeSelector and tolerations (no reports-server tolerations)..." >&2
-	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set image.repository=$(PACKAGE) \
-		--set image.tag=$(GIT_SHA) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set config.etcd.nodeSelector.disktype=ssd \
-		--set "config.etcd.tolerations[0].key=example-key" \
-		--set "config.etcd.tolerations[0].operator=Equal" \
-		--set "config.etcd.tolerations[0].value=example-value" \
-		--set "config.etcd.tolerations[0].effect=NoSchedule"
-
-#########################################################################
-# Targets with reports-server tolerations added in addition to etcd settings
-#########################################################################
-
-.PHONY: kind-install-node-selector-rs
-kind-install-node-selector-rs: $(HELM) kind-load
-	@echo "Installing chart with etcd nodeSelector and reports-server tolerations (nodeSelector only)..." >&2
-	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set image.repository=$(PACKAGE) \
-		--set image.tag=$(GIT_SHA) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set config.etcd.nodeSelector.disktype=ssd \
-		--set "tolerations[0].key=example-key" \
-		--set "tolerations[0].operator=Equal" \
-		--set "tolerations[0].value=example-value" \
-		--set "tolerations[0].effect=NoSchedule"
-
-.PHONY: kind-install-tolerations-rs
-kind-install-tolerations-rs: $(HELM) kind-load
-	@echo "Installing chart with etcd tolerations and reports-server tolerations (tolerations only)..." >&2
-	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set image.repository=$(PACKAGE) \
-		--set image.tag=$(GIT_SHA) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set "config.etcd.tolerations[0].key=example-key" \
-		--set "config.etcd.tolerations[0].operator=Equal" \
-		--set "config.etcd.tolerations[0].value=example-value" \
-		--set "config.etcd.tolerations[0].effect=NoSchedule" \
-		--set "tolerations[0].key=example-key" \
-		--set "tolerations[0].operator=Equal" \
-		--set "tolerations[0].value=example-value" \
-		--set "tolerations[0].effect=NoSchedule"
-
-.PHONY: kind-install-both-rs
-kind-install-both-rs: $(HELM) kind-load
-	@echo "Installing chart with both etcd nodeSelector and tolerations plus reports-server tolerations..." >&2
-	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set image.repository=$(PACKAGE) \
-		--set image.tag=$(GIT_SHA) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set config.etcd.nodeSelector.disktype=ssd \
-		--set "config.etcd.tolerations[0].key=example-key" \
-		--set "config.etcd.tolerations[0].operator=Equal" \
-		--set "config.etcd.tolerations[0].value=example-value" \
-		--set "config.etcd.tolerations[0].effect=NoSchedule" \
-		--set "tolerations[0].key=example-key" \
-		--set "tolerations[0].operator=Equal" \
-		--set "tolerations[0].value=example-value" \
-		--set "tolerations[0].effect=NoSchedule"
 
 .PHONY: kind-install-etcd
 kind-install-etcd: $(HELM) kind-load ## Build image, load it in kind cluster and deploy helm chart
