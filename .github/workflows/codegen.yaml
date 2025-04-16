@@ -3,7 +3,7 @@
 name: Verify & Update Codegen
 
 permissions:
-  contents: write  # Allow pushes to the repo
+  contents: write  # Allow the workflow to push changes
 
 on:
   pull_request:
@@ -22,8 +22,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0            # Ensure full history is fetched
-          persist-credentials: true  # Allow push using default token
+          ref: ${{ github.head_ref }}   # Check out the branch name from the PR
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -38,15 +39,13 @@ jobs:
 
       - name: Commit Generated Code (if any changes)
         run: |
-          # Check if there are any uncommitted changes
           if [ -n "$(git status --porcelain)" ]; then
             echo "Codegen produced changes, committing and pushing..."
-            # Configure Git identity for the commit
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git config user.name "github-actions[bot]"
             git add .
             git commit -m "chore: update generated code"
-            git push
+            git push origin HEAD:${{ github.head_ref }}
           else
             echo "No generated code changes found."
           fi
