@@ -1,8 +1,9 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: Verify codegen
+name: Verify & Update Codegen
 
-permissions: {}
+permissions:
+  contents: write  # Allow pushes to the repo
 
 on:
   pull_request:
@@ -18,13 +19,39 @@ jobs:
   required:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0            # Ensure full history is fetched
+          persist-credentials: true  # Allow push using default token
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - name: Verify codegen
+
+      - name: Run Codegen
+        run: |
+          set -e
+          make codegen
+
+      - name: Commit Generated Code (if any changes)
+        run: |
+          # Check if there are any uncommitted changes
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Codegen produced changes, committing and pushing..."
+            # Configure Git identity for the commit
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git add .
+            git commit -m "chore: update generated code"
+            git push
+          else
+            echo "No generated code changes found."
+          fi
+
+      - name: Verify Generated Code Is Up To Date
         run: |
           set -e
           make verify-codegen
