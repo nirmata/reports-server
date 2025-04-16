@@ -73,6 +73,8 @@ helm install reports-server --namespace reports-server --create-namespace report
 | config.etcd.endpoints | string | `nil` |  |
 | config.etcd.insecure | bool | `true` |  |
 | config.etcd.storage | string | `nil` |  |
+| config.etcd.nodeSelector | object | `{}` |  |
+| config.etcd.tolerations | list | `[]` |  |
 | config.db.secretName | string | `""` | If set, database connection information will be read from the Secret with this name. Overrides `db.host`, `db.name`, `db.user`, and `db.password`. |
 | config.db.host | string | `"reports-server-cluster-rw.reports-server"` | Database host |
 | config.db.hostSecretKeyName | string | `"host"` | The database host will be read from this `key` in the specified Secret, when `db.secretName` is set. |

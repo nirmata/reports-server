@@ -423,11 +423,11 @@ spec:
         - name: K8S_NAMESPACE
           valueFrom:
             fieldRef:
-             fieldPath: metadata.namespace
+              fieldPath: metadata.namespace
         - name: HOSTNAME
           valueFrom:
             fieldRef:
-             fieldPath: metadata.name
+              fieldPath: metadata.name
         - name: SERVICE_NAME
           valueFrom:
             fieldRef:
