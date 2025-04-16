@@ -9,6 +9,12 @@ metadata:
     app: etcd-reports-server
     {{- include "reports-server.labels" . | nindent 4 }}
 spec:
+{{- if .Values.config.etcd.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.config.etcd.nodeSelector | nindent 8 }}
+{{- end }}
+{{- if .Values.config.etcd.tolerations }}
+      tolerations: {{ toYaml .Values.config.etcd.tolerations | nindent 8 }}
+{{- end }}
   type: ClusterIP
   clusterIP: None
   selector:
