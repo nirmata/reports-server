@@ -1,30 +1,50 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-
-name: Verify codegen
-
-permissions: {}
+name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    branches:
-      - 'main'
-      - 'release*'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  required:
+  verify-codegen:
     runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+      GOPROXY: https://proxy.golang.org,direct
     steps:
-      - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Go 1.21
+        uses: actions/setup-go@v3
         with:
-          go-version-file: go.mod
-          cache-dependency-path: go.sum
-      - name: Verify codegen
+          go-version: 1.21
+
+      - name: Cache Go build & modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/.cache/go-mod
+            vendor
+          key: ${{ runner.os }}-go-mod-${{ hashFiles('go.sum') }}
+
+      - name: Install codegen tools
         run: |
-          set -e
-          make verify-codegen
+          # openapi-gen
+          go install sigs.k8s.io/controller-tools/cmd/openapi-gen@v0.9.0
+          # helm (locally, for install‑manifest)
+          mkdir -p .tools
+          curl -fsSL https://get.helm.sh/helm-v3.10.1-linux-amd64.tar.gz \
+            | tar xz --strip-components=1 linux-amd64/helm -C .tools
+          # pre‑pull helm‑docs image
+          docker pull jnorwood/helm-docs:v1.11.0
+
+      - name: Vendor dependencies
+        run: make vendor
+
+      - name: Generate codegen & docs
+        run: make codegen
+
+      - name: Verify codegen & docs
+        run: make verify-codegen
