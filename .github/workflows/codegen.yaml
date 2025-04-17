@@ -1,46 +1,30 @@
-name: CI
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Verify codegen
+
+permissions: {}
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
+    branches:
+      - 'main'
+      - 'release*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  verify-codegen:
+  required:
     runs-on: ubuntu-latest
-    env:
-      # allow go to treat your enterprise‑kyverno org as private
-      GOPRIVATE: github.com/nirmata/*
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          # use your PAT so that private go modules can be fetched
-          persist-credentials: true
-          token: ${{ secrets.PAT }}     # store your ghp_… token in repo secrets as PAT
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.21
-
-      - name: Configure Git to use PAT for github.com
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Verify codegen
         run: |
-          git config --global url."https://${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
-
-      - name: Cache Go build & modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/.cache/go-mod
-            vendor
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Vendor dependencies
-        run: make vendor
-
-      - name: Verify codegen & docs
-        run: make verify-codegen
+          set -e
+          make verify-codegen
