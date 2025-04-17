@@ -1,35 +1,35 @@
-# .github/workflows/verify-codegen.yml
-name: Verify codegen
-
-permissions: {}
+name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    branches:
-      - 'main'
-      - 'release*'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  required:
+  verify-codegen:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v3
         with:
-          go-version-file: go.mod
-          cache-dependency-path: go.sum
+          go-version: 1.21
 
-      # - name: Install codegen tools
-      #   run: make install-tools
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/.cache/go-mod
+            vendor
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-      - name: Verify codegen
-        env:
-          GO111MODULE: on
+      - name: Vendor dependencies
+        run: make vendor
+
+      - name: Verify codegen & docs
         run: make verify-codegen
