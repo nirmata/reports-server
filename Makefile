@@ -31,7 +31,7 @@ vendor:
 # CODEGEN #
 ###########
 
-G
+
 GOPATH_SHIM     := ${PWD}/.gopath
 PACKAGE_SHIM    := $(GOPATH_SHIM)/src/$(PACKAGE)
 
