@@ -26,8 +26,8 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
-      - name: Install codegen tools
-        run: make install-tools
+      # - name: Install codegen tools
+      #   run: make install-tools
 
       - name: Verify codegen
         env:
