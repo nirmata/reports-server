@@ -2,25 +2,33 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
 jobs:
   verify-codegen:
     runs-on: ubuntu-latest
     env:
+      # allow go to treat your enterprise‑kyverno org as private
       GOPRIVATE: github.com/nirmata/*
-      GIT_TERMINAL_PROMPT: "1"
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          # use your PAT so that private go modules can be fetched
+          persist-credentials: true
+          token: ${{ secrets.PAT }}     # store your ghp_… token in repo secrets as PAT
 
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: 1.21
 
-      - name: Cache Go modules
+      - name: Configure Git to use PAT for github.com
+        run: |
+          git config --global url."https://${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Cache Go build & modules
         uses: actions/cache@v3
         with:
           path: |
