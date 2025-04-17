@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
@@ -29,14 +29,5 @@ jobs:
       - name: Install codegen tools
         run: make install-tools
 
-      - name: Prepare GOPATH shim
-        run: |
-          mkdir -p .gopath/src/github.com/kyverno
-          git clone https://github.com/kyverno/kyverno.git .gopath/src/github.com/kyverno/kyverno
-
       - name: Verify codegen
-        env:
-          # Force GOPATH mode so openapi-gen picks up .gopath/*
-          GO111MODULE: off
-          GOPATH:     ${{ github.workspace }}/.gopath
         run: make verify-codegen
