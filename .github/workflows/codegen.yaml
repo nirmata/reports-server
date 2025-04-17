@@ -30,4 +30,6 @@ jobs:
         run: make install-tools
 
       - name: Verify codegen
+        env:
+          GO111MODULE: on
         run: make verify-codegen
