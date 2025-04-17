@@ -26,13 +26,17 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
-      # clone kyverno into your GOPATH_SHIM so openapi-gen can find its API packages
-      - name: Populate GOPATH shim with Kyverno
+      - name: Fetch Kyverno APIs into GOPATH shim
         run: |
+          # our Makefile will symlink PWD into .gopath/src/github.com/kyverno/reports-server
           mkdir -p .gopath/src/github.com/kyverno
-          git clone https://github.com/kyverno/kyverno .gopath/src/github.com/kyverno/kyverno
+          git clone https://github.com/kyverno/kyverno.git .gopath/src/github.com/kyverno/kyverno
 
       - name: Verify codegen
+        # disable modules so code-generator actually reads from .gopath
+        env:
+          GO111MODULE: off
+          GOPATH:     ${{ github.workspace }}/.gopath
         run: |
           set -e
           make verify-codegen
