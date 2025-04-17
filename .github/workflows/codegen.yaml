@@ -8,6 +8,9 @@ on:
 jobs:
   verify-codegen:
     runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: github.com/nirmata/*
+      GIT_TERMINAL_PROMPT: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
