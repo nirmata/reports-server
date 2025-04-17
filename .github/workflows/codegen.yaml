@@ -2,7 +2,9 @@
 
 name: Verify codegen
 
-permissions: {}
+# need read access so checkout can use the token
+permissions:
+  contents: read
 
 on:
   pull_request:
@@ -17,13 +19,24 @@ concurrency:
 jobs:
   required:
     runs-on: ubuntu-latest
+
+    # make the PAT and private‐module list available to Go
+    env:
+      GITHUB_TOKEN: ${{ secrets.PAT }}
+      GOPRIVATE: github.com/nirmata/*
+
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          persist-credentials: true   # injects GITHUB_TOKEN into git remotes
+
+      - name: Set up Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
+
       - name: Verify codegen
         run: |
           set -e
