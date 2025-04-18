@@ -111,15 +111,16 @@ func (p *postgresstore) Ready() bool {
 }
 
 type PostgresConfig struct {
-	Host        string
-	Port        int
-	User        string
-	Password    string
-	DBname      string
-	SSLMode     string
-	SSLRootCert string
-	SSLKey      string
-	SSLCert     string
+	Host             string
+	ReadReplicaHosts []string
+	Port             int
+	User             string
+	Password         string
+	DBname           string
+	SSLMode          string
+	SSLRootCert      string
+	SSLKey           string
+	SSLCert          string
 }
 
 func (p PostgresConfig) String() string {
