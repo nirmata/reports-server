@@ -123,15 +123,16 @@ func (o Options) ServerConfig() (*server.Config, error) {
 	}
 
 	dbconfig := &db.PostgresConfig{
-		Host:        o.DBHost,
-		Port:        o.DBPort,
-		User:        o.DBUser,
-		Password:    o.DBPassword,
-		DBname:      o.DBName,
-		SSLMode:     o.DBSSLMode,
-		SSLRootCert: o.DBSSLRootCert,
-		SSLKey:      o.DBSSLKey,
-		SSLCert:     o.DBSSLCert,
+		Host:             o.DBHost,
+		ReadReplicaHosts: o.DBReadReplicaHosts,
+		Port:             o.DBPort,
+		User:             o.DBUser,
+		Password:         o.DBPassword,
+		DBname:           o.DBName,
+		SSLMode:          o.DBSSLMode,
+		SSLRootCert:      o.DBSSLRootCert,
+		SSLKey:           o.DBSSLKey,
+		SSLCert:          o.DBSSLCert,
 	}
 
 	return &server.Config{
