@@ -226,5 +226,9 @@ func (o *Options) dbConfig() error {
 			o.DBPort = dbPort
 		}
 	}
+
+	if len(os.Getenv("DB_READ_REPLICA_HOSTS")) > 0 {
+		o.DBReadReplicaHosts = strings.Split(os.Getenv("DB_READ_REPLICA_HOSTS"), ",")
+	}
 	return nil
 }
