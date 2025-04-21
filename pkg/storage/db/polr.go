@@ -77,12 +77,15 @@ func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.Policy
 }
 
 func (p *polrdb) Get(ctx context.Context, name, namespace string) (*v1alpha2.PolicyReport, error) {
-	p.Lock()
-	defer p.Unlock()
-
 	var jsonb string
 
-	row := p.primaryDB.QueryRow("SELECT report FROM policyreports WHERE (namespace = $1) AND (name = $2) AND (clusterId = $3)", namespace, name, p.clusterId)
+	row, err := p.ReadQuery(ctx, "SELECT report FROM policyreports WHERE (namespace = $1) AND (name = $2) AND (clusterId = $3)", namespace, name, p.clusterId)
+	if err != nil {
+		klog.ErrorS(err, "policyreport get: ")
+		return nil, fmt.Errorf("policyreport get %s/%s: %v", namespace, name, err)
+	}
+	defer row.Close()
+
 	if err := row.Scan(&jsonb); err != nil {
 		klog.ErrorS(err, fmt.Sprintf("policyreport not found name=%s namespace=%s", name, namespace))
 		if err == sql.ErrNoRows {
@@ -90,8 +93,9 @@ func (p *polrdb) Get(ctx context.Context, name, namespace string) (*v1alpha2.Pol
 		}
 		return nil, fmt.Errorf("policyreport get %s/%s: %v", namespace, name, err)
 	}
+
 	var report v1alpha2.PolicyReport
-	err := json.Unmarshal([]byte(jsonb), &report)
+	err = json.Unmarshal([]byte(jsonb), &report)
 	if err != nil {
 		klog.ErrorS(err, "cannot convert jsonb to policyreport")
 		return nil, fmt.Errorf("policyreport list %q: cannot convert jsonb to policyreport: %v", namespace, err)
