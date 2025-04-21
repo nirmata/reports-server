@@ -37,14 +37,11 @@ func NewClusterPolicyReportStore(primaryDB *sql.DB, readReplicaDBs []*sql.DB, cl
 }
 
 func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, error) {
-	c.Lock()
-	defer c.Unlock()
-
 	klog.Infof("listing all values")
 	res := make([]*v1alpha2.ClusterPolicyReport, 0)
 	var jsonb string
 
-	rows, err := c.primaryDB.Query("SELECT report FROM clusterpolicyreports WHERE clusterId = $1", c.clusterId)
+	rows, err := c.ReadQuery(ctx, "SELECT report FROM clusterpolicyreports WHERE clusterId = $1", c.clusterId)
 	if err != nil {
 		klog.ErrorS(err, "failed to list clusterpolicyreports")
 		return nil, fmt.Errorf("clusterpolicyreport list: %v", err)
@@ -69,12 +66,15 @@ func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, er
 }
 
 func (c *cpolrdb) Get(ctx context.Context, name string) (*v1alpha2.ClusterPolicyReport, error) {
-	c.Lock()
-	defer c.Unlock()
-
 	var jsonb string
 
-	row := c.primaryDB.QueryRow("SELECT report FROM clusterpolicyreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
+	row, err := c.ReadQuery(ctx, "SELECT report FROM clusterpolicyreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
+	if err != nil {
+		klog.ErrorS(err, "failed to get clusterpolicyreport")
+		return nil, fmt.Errorf("clusterpolicyreport get: %v", err)
+	}
+	defer row.Close()
+
 	if err := row.Scan(&jsonb); err != nil {
 		klog.ErrorS(err, fmt.Sprintf("clusterpolicyreport not found name=%s", name))
 		if err == sql.ErrNoRows {
@@ -82,8 +82,9 @@ func (c *cpolrdb) Get(ctx context.Context, name string) (*v1alpha2.ClusterPolicy
 		}
 		return nil, fmt.Errorf("clusterpolicyreport get %s: %v", name, err)
 	}
+
 	var report v1alpha2.ClusterPolicyReport
-	err := json.Unmarshal([]byte(jsonb), &report)
+	err = json.Unmarshal([]byte(jsonb), &report)
 	if err != nil {
 		klog.ErrorS(err, "failed to unmarshal report")
 		return nil, fmt.Errorf("clusterpolicyreport list: cannot convert jsonb to policyreport: %v", err)
