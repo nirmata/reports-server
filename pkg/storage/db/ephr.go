@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"time"
 
 	reportsv1 "github.com/kyverno/kyverno/api/reports/v1"
 	"github.com/kyverno/reports-server/pkg/storage/api"
@@ -165,7 +166,9 @@ func (c *ephrdb) ReadQuery(ctx context.Context, query string, args ...interface{
 	copy(replicas, c.readReplicaDBs)
 	c.Unlock()
 
-	rand.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
+	source := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(source)
+	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
 
 	for _, readReplicaDB := range replicas {
 		rows, err := readReplicaDB.Query(query, args...)

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/kyverno/reports-server/pkg/storage/api"
 	"k8s.io/klog/v2"
@@ -155,7 +156,9 @@ func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface
 	copy(replicas, c.readReplicaDBs)
 	c.Unlock()
 
-	rand.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
+	source := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(source)
+	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
 
 	for _, readReplicaDB := range replicas {
 		rows, err := readReplicaDB.Query(query, args...)
