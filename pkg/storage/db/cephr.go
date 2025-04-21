@@ -37,18 +37,16 @@ func NewClusterEphemeralReportStore(primaryDB *sql.DB, readReplicaDBs []*sql.DB,
 }
 
 func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, error) {
-	c.Lock()
-	defer c.Unlock()
-
 	klog.Infof("listing all values")
 	res := make([]*reportsv1.ClusterEphemeralReport, 0)
 	var jsonb string
 
-	rows, err := c.primaryDB.Query("SELECT report FROM clusterephemeralreports WHERE (clusterId = $1)", c.clusterId)
+	rows, err := c.ReadQuery(ctx, "SELECT report FROM clusterephemeralreports WHERE (clusterId = $1)", c.clusterId)
 	if err != nil {
 		klog.ErrorS(err, "failed to list clusterephemeralreports")
 		return nil, fmt.Errorf("clusterephemeralreports list: %v", err)
 	}
+
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
