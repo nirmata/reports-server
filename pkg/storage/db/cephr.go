@@ -20,20 +20,20 @@ type cephr struct {
 	readReplicaDBs []*sql.DB
 }
 
-func NewClusterEphemeralReportStore(db *sql.DB, readReplicaDBs []*sql.DB, clusterId string) (api.ClusterEphemeralReportsInterface, error) {
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS clusterephemeralreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
+func NewClusterEphemeralReportStore(primaryDB *sql.DB, readReplicaDBs []*sql.DB, clusterId string) (api.ClusterEphemeralReportsInterface, error) {
+	_, err := primaryDB.Exec("CREATE TABLE IF NOT EXISTS clusterephemeralreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
 	if err != nil {
 		klog.ErrorS(err, "failed to create table")
 		return nil, err
 	}
 
-	_, err = db.Exec("CREATE INDEX IF NOT EXISTS clusterephemeralreportcluster ON clusterephemeralreports(clusterId)")
+	_, err = primaryDB.Exec("CREATE INDEX IF NOT EXISTS clusterephemeralreportcluster ON clusterephemeralreports(clusterId)")
 	if err != nil {
 		klog.ErrorS(err, "failed to create index")
 		return nil, err
 	}
 
-	return &cephr{primaryDB: db, readReplicaDBs: readReplicaDBs, clusterId: clusterId}, nil
+	return &cephr{primaryDB: primaryDB, readReplicaDBs: readReplicaDBs, clusterId: clusterId}, nil
 }
 
 func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, error) {
