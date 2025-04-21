@@ -151,10 +151,10 @@ func (c *cpolrdb) Delete(ctx context.Context, name string) error {
 
 func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	c.Lock()
-	defer c.Unlock()
-
 	replicas := make([]*sql.DB, len(c.readReplicaDBs))
 	copy(replicas, c.readReplicaDBs)
+	c.Unlock()
+
 	rand.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
 
 	for _, readReplicaDB := range replicas {
