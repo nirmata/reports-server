@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"sync"
 
 	"github.com/kyverno/reports-server/pkg/storage/api"
@@ -152,7 +153,11 @@ func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface
 	c.Lock()
 	defer c.Unlock()
 
-	for _, readReplicaDB := range c.readReplicaDBs {
+	replicas := make([]*sql.DB, len(c.readReplicaDBs))
+	copy(replicas, c.readReplicaDBs)
+	rand.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
+
+	for _, readReplicaDB := range replicas {
 		rows, err := readReplicaDB.Query(query, args...)
 		if err != nil {
 			klog.ErrorS(err, "failed to query read replica due to : ", err)
