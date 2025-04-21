@@ -168,5 +168,5 @@ func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface
 	}
 
 	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.Query(query, c.clusterId)
+	return c.primaryDB.Query(query, args...)
 }
