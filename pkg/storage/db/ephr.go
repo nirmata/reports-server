@@ -49,9 +49,9 @@ func (p *ephrdb) List(ctx context.Context, namespace string) ([]*reportsv1.Ephem
 	var err error
 
 	if len(namespace) == 0 {
-		rows, err = p.primaryDB.Query("SELECT report FROM ephemeralreports WHERE clusterId = $1", p.clusterId)
+		rows, err = p.ReadQuery(ctx, "SELECT report FROM ephemeralreports WHERE clusterId = $1", p.clusterId)
 	} else {
-		rows, err = p.primaryDB.Query("SELECT report FROM ephemeralreports WHERE namespace = $1 AND clusterId = $2", namespace, p.clusterId)
+		rows, err = p.ReadQuery(ctx, "SELECT report FROM ephemeralreports WHERE namespace = $1 AND clusterId = $2", namespace, p.clusterId)
 	}
 	if err != nil {
 		klog.ErrorS(err, "ephemeralreport list: ")
