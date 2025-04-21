@@ -146,3 +146,21 @@ func (c *cpolrdb) Delete(ctx context.Context, name string) error {
 	}
 	return nil
 }
+
+func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	c.Lock()
+	defer c.Unlock()
+
+	for _, readReplicaDB := range c.readReplicaDBs {
+		rows, err := readReplicaDB.Query(query, args...)
+		if err != nil {
+			klog.ErrorS(err, "failed to query read replica due to : ", err)
+			klog.Info("retrying with next read replica")
+			continue
+		}
+		return rows, nil
+	}
+
+	klog.Info("no read replicas available, querying primary db")
+	return c.primaryDB.Query(query, c.clusterId)
+}
