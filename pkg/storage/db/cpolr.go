@@ -68,9 +68,6 @@ func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, er
 }
 
 func (c *cpolrdb) Get(ctx context.Context, name string) (*v1alpha2.ClusterPolicyReport, error) {
-	c.Lock()
-	defer c.Unlock()
-
 	var jsonb string
 
 	row := c.ReadQueryRow(ctx, "SELECT report FROM clusterpolicyreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
@@ -81,6 +78,7 @@ func (c *cpolrdb) Get(ctx context.Context, name string) (*v1alpha2.ClusterPolicy
 		}
 		return nil, fmt.Errorf("clusterpolicyreport get %s: %v", name, err)
 	}
+
 	var report v1alpha2.ClusterPolicyReport
 	err := json.Unmarshal([]byte(jsonb), &report)
 	if err != nil {
@@ -185,6 +183,7 @@ func (c *cpolrdb) ReadQueryRow(ctx context.Context, query string, args ...interf
 			klog.Info("retrying with next read replica")
 			continue
 		}
+
 		return row
 	}
 
