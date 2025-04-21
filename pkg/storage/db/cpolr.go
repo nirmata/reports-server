@@ -68,15 +68,12 @@ func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, er
 }
 
 func (c *cpolrdb) Get(ctx context.Context, name string) (*v1alpha2.ClusterPolicyReport, error) {
+	c.Lock()
+	defer c.Unlock()
+
 	var jsonb string
 
-	row, err := c.ReadQuery(ctx, "SELECT report FROM clusterpolicyreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
-	if err != nil {
-		klog.ErrorS(err, "failed to get clusterpolicyreport")
-		return nil, fmt.Errorf("clusterpolicyreport get: %v", err)
-	}
-	defer row.Close()
-
+	row := c.ReadQueryRow(ctx, "SELECT report FROM clusterpolicyreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
 	if err := row.Scan(&jsonb); err != nil {
 		klog.ErrorS(err, fmt.Sprintf("clusterpolicyreport not found name=%s", name))
 		if err == sql.ErrNoRows {
@@ -84,9 +81,8 @@ func (c *cpolrdb) Get(ctx context.Context, name string) (*v1alpha2.ClusterPolicy
 		}
 		return nil, fmt.Errorf("clusterpolicyreport get %s: %v", name, err)
 	}
-
 	var report v1alpha2.ClusterPolicyReport
-	err = json.Unmarshal([]byte(jsonb), &report)
+	err := json.Unmarshal([]byte(jsonb), &report)
 	if err != nil {
 		klog.ErrorS(err, "failed to unmarshal report")
 		return nil, fmt.Errorf("clusterpolicyreport list: cannot convert jsonb to policyreport: %v", err)
@@ -152,8 +148,7 @@ func (c *cpolrdb) Delete(ctx context.Context, name string) error {
 
 func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	c.Lock()
-	replicas := make([]*sql.DB, len(c.readReplicaDBs))
-	copy(replicas, c.readReplicaDBs)
+	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
 	c.Unlock()
 
 	source := rand.NewSource(time.Now().UnixNano())
@@ -172,4 +167,27 @@ func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface
 
 	klog.Info("no read replicas available, querying primary db")
 	return c.primaryDB.Query(query, args...)
+}
+
+func (c *cpolrdb) ReadQueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	c.Lock()
+	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
+	c.Unlock()
+
+	source := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(source)
+	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
+
+	for _, readReplicaDB := range replicas {
+		row := readReplicaDB.QueryRow(query, args...)
+		if row.Err() != nil {
+			klog.ErrorS(row.Err(), "failed to query read replica due to : ", row.Err())
+			klog.Info("retrying with next read replica")
+			continue
+		}
+		return row
+	}
+
+	klog.Info("no read replicas available, querying primary db")
+	return c.primaryDB.QueryRow(query, args...)
 }
