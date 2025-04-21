@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand/v2"
+	"math/rand"
 	"sync"
 
 	"github.com/kyverno/reports-server/pkg/storage/api"
