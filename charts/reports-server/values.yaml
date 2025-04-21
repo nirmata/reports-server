@@ -208,6 +208,10 @@ config:
 
     # -- Database host
     host: reports-server-cluster-rw.reports-server
+
+    # -- Database read replica hosts
+    readReplicaHosts: []
+
     # -- The database host will be read from this `key` in the specified Secret, when `db.secretName` is set.
     hostSecretKeyName: "host"
 
