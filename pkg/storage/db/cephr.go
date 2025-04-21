@@ -42,12 +42,12 @@ func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, 
 	var jsonb string
 
 	rows, err := c.ReadQuery(ctx, "SELECT report FROM clusterephemeralreports WHERE (clusterId = $1)", c.clusterId)
+	defer rows.Close()
 	if err != nil {
 		klog.ErrorS(err, "failed to list clusterephemeralreports")
 		return nil, fmt.Errorf("clusterephemeralreports list: %v", err)
 	}
 
-	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
 			klog.ErrorS(err, "failed to scan rows")
@@ -67,12 +67,15 @@ func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, 
 }
 
 func (c *cephr) Get(ctx context.Context, name string) (*reportsv1.ClusterEphemeralReport, error) {
-	c.Lock()
-	defer c.Unlock()
-
 	var jsonb string
 
-	row := c.primaryDB.QueryRow("SELECT report FROM clusterephemeralreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
+	row, err := c.ReadQuery(ctx, "SELECT report FROM clusterephemeralreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
+	defer row.Close()
+	if err != nil {
+		klog.ErrorS(err, "failed to get clusterephemeralreport")
+		return nil, fmt.Errorf("clusterephemeralreport get: %v", err)
+	}
+
 	if err := row.Scan(&jsonb); err != nil {
 		klog.ErrorS(err, fmt.Sprintf("clusterephemeralreport not found name=%s", name))
 		if err == sql.ErrNoRows {
@@ -80,8 +83,9 @@ func (c *cephr) Get(ctx context.Context, name string) (*reportsv1.ClusterEphemer
 		}
 		return nil, fmt.Errorf("clusterephemeralreport get %s: %v", name, err)
 	}
+
 	var report reportsv1.ClusterEphemeralReport
-	err := json.Unmarshal([]byte(jsonb), &report)
+	err = json.Unmarshal([]byte(jsonb), &report)
 	if err != nil {
 		klog.ErrorS(err, "failed to unmarshal report")
 		return nil, fmt.Errorf("clusterephemeralreport list: cannot convert jsonb to ephemeralreport: %v", err)
