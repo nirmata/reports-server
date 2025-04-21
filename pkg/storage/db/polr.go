@@ -41,9 +41,6 @@ func NewPolicyReportStore(primaryDB *sql.DB, readReplicaDBs []*sql.DB, clusterId
 }
 
 func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.PolicyReport, error) {
-	p.Lock()
-	defer p.Unlock()
-
 	klog.Infof("listing all values for namespace:%s", namespace)
 	res := make([]*v1alpha2.PolicyReport, 0)
 	var jsonb string
@@ -51,9 +48,9 @@ func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.Policy
 	var err error
 
 	if len(namespace) == 0 {
-		rows, err = p.primaryDB.Query("SELECT report FROM policyreports WHERE clusterId = $1", p.clusterId)
+		rows, err = p.ReadQuery(ctx, "SELECT report FROM policyreports WHERE clusterId = $1", p.clusterId)
 	} else {
-		rows, err = p.primaryDB.Query("SELECT report FROM policyreports WHERE namespace = $1 AND clusterId = $2", namespace, p.clusterId)
+		rows, err = p.ReadQuery(ctx, "SELECT report FROM policyreports WHERE namespace = $1 AND clusterId = $2", namespace, p.clusterId)
 	}
 
 	if err != nil {
@@ -155,4 +152,22 @@ func (p *polrdb) Delete(ctx context.Context, name, namespace string) error {
 		return fmt.Errorf("delete policyreport: %v", err)
 	}
 	return nil
+}
+
+func (c *polrdb) ReadQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	c.Lock()
+	defer c.Unlock()
+
+	for _, readReplicaDB := range c.readReplicaDBs {
+		rows, err := readReplicaDB.Query(query, args...)
+		if err != nil {
+			klog.ErrorS(err, "failed to query read replica due to : ", err)
+			klog.Info("retrying with next read replica")
+			continue
+		}
+		return rows, nil
+	}
+
+	klog.Info("no read replicas available, querying primary db")
+	return c.primaryDB.Query(query, c.clusterId)
 }
