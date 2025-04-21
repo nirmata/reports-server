@@ -42,11 +42,11 @@ func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, 
 	var jsonb string
 
 	rows, err := c.ReadQuery(ctx, "SELECT report FROM clusterephemeralreports WHERE (clusterId = $1)", c.clusterId)
-	defer rows.Close()
 	if err != nil {
 		klog.ErrorS(err, "failed to list clusterephemeralreports")
 		return nil, fmt.Errorf("clusterephemeralreports list: %v", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
@@ -70,11 +70,11 @@ func (c *cephr) Get(ctx context.Context, name string) (*reportsv1.ClusterEphemer
 	var jsonb string
 
 	row, err := c.ReadQuery(ctx, "SELECT report FROM clusterephemeralreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
-	defer row.Close()
 	if err != nil {
 		klog.ErrorS(err, "failed to get clusterephemeralreport")
 		return nil, fmt.Errorf("clusterephemeralreport get: %v", err)
 	}
+	defer row.Close()
 
 	if err := row.Scan(&jsonb); err != nil {
 		klog.ErrorS(err, fmt.Sprintf("clusterephemeralreport not found name=%s", name))
