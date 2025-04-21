@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib" // Import the pgx driver
+	_ "github.com/jackc/pgx/v5/stdlib" // pgx driver
 	"github.com/kyverno/reports-server/pkg/storage/api"
 	"k8s.io/klog/v2"
 )
@@ -18,64 +18,86 @@ const (
 )
 
 func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
-	klog.Infof("starting postgres db")
-	db, err := sql.Open("pgx", config.String())
+	klog.Infof("starting postgres db (primary host %q)", config.Host)
+
+	// 1) Open primary
+	primaryDB, err := sql.Open("pgx", config.String())
 	if err != nil {
-		klog.Error("failed to open db", err.Error())
+		klog.ErrorS(err, "failed to open primary db")
 		return nil, err
 	}
+	if err := pingWithRetry(primaryDB); err != nil {
+		return nil, err
+	}
+	klog.Info("successfully connected to primary db")
 
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		klog.Infof("pinging postgres db, attempt: %d", attempt)
-		err := db.PingContext(context.TODO())
-		if err == nil {
-			break
+	// 2) Open read-replicas
+	var readReplicas []*sql.DB
+	for _, host := range config.ReadReplicaHosts {
+		replicaCfg := *config
+		replicaCfg.Host = host
+		dsn := replicaCfg.String()
+
+		klog.Infof("starting postgres read‑replica db (host %q)", host)
+		replicaDB, err := sql.Open("pgx", dsn)
+		if err != nil {
+			klog.ErrorS(err, "failed to open replica db", "host", host)
+			return nil, err
 		}
-		klog.Error("failed to ping db", err.Error())
-		time.Sleep(sleepDuration)
+		if err := pingWithRetry(replicaDB); err != nil {
+			return nil, err
+		}
+		klog.Infof("connected to replica %q", host)
+		readReplicas = append(readReplicas, replicaDB)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		klog.Error("failed to ping db", err.Error())
-		return nil, err
-	}
-
-	klog.Info("successfully connected to db")
-
+	// 3) Initialize all stores with the same primary + replicas
 	klog.Info("starting reports store")
-	polrstore, err := NewPolicyReportStore(db, clusterId)
+	polrstore, err := NewPolicyReportStore(primaryDB, readReplicas, clusterId)
 	if err != nil {
-		klog.Error("failed to start policy report store", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("policy report store: %w", err)
 	}
 
-	cpolrstore, err := NewClusterPolicyReportStore(db, clusterId)
+	klog.Info("starting cluster policy report store")
+	cpolrstore, err := NewClusterPolicyReportStore(primaryDB, readReplicas, clusterId)
 	if err != nil {
-		klog.Error("failed to start cluster policy report store", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("cluster policy report store: %w", err)
 	}
 
-	ephrstore, err := NewEphemeralReportStore(db, clusterId)
+	klog.Info("starting ephemeral report store")
+	ephrstore, err := NewEphemeralReportStore(primaryDB, readReplicas, clusterId)
 	if err != nil {
-		klog.Error("failed to start policy report store", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("ephemeral report store: %w", err)
 	}
 
-	cephrstore, err := NewClusterEphemeralReportStore(db, clusterId)
+	klog.Info("starting cluster ephemeral report store")
+	cephrstore, err := NewClusterEphemeralReportStore(primaryDB, readReplicas, clusterId)
 	if err != nil {
-		klog.Error("failed to start cluster policy report store", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("cluster ephemeral report store: %w", err)
 	}
 
 	klog.Info("successfully setup storage")
 	return &postgresstore{
-		db:         db,
+		db:         primaryDB,
 		polrstore:  polrstore,
 		cpolrstore: cpolrstore,
 		ephrstore:  ephrstore,
 		cephrstore: cephrstore,
 	}, nil
+}
+
+// pingWithRetry tries db.PingContext up to maxRetries with sleep.
+func pingWithRetry(db *sql.DB) error {
+	for i := 1; i <= maxRetries; i++ {
+		klog.Infof("pinging db (attempt %d/%d)", i, maxRetries)
+		if err := db.PingContext(context.Background()); err != nil {
+			klog.ErrorS(err, "ping failed")
+			time.Sleep(sleepDuration)
+			continue
+		}
+		return nil
+	}
+	return fmt.Errorf("could not connect after %d attempts", maxRetries)
 }
 
 type postgresstore struct {
@@ -103,8 +125,8 @@ func (p *postgresstore) EphemeralReports() api.EphemeralReportsInterface {
 }
 
 func (p *postgresstore) Ready() bool {
-	if err := p.db.Ping(); err != nil {
-		klog.Error("failed to ping db", err.Error())
+	if err := p.db.PingContext(context.Background()); err != nil {
+		klog.ErrorS(err, "failed to ping primary db")
 		return false
 	}
 	return true
@@ -124,26 +146,27 @@ type PostgresConfig struct {
 }
 
 func (p PostgresConfig) String() string {
+	hosts := strings.Split(p.Host, ",")
 	if p.Port != 0 {
-		hosts := strings.Split(p.Host, ",")
-		for i, host := range hosts {
-			hosts[i] = fmt.Sprintf("%s:%d", host, p.Port)
+		for i, h := range hosts {
+			hosts[i] = fmt.Sprintf("%s:%d", h, p.Port)
 		}
-		p.Host = strings.Join(hosts, ",")
 	}
+	hostPart := strings.Join(hosts, ",")
 
-	url := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
-		p.User, p.Password, p.Host, p.DBname, p.SSLMode)
+	// build the base DSN
+	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+		p.User, p.Password, hostPart, p.DBname, p.SSLMode,
+	)
 
 	if p.SSLRootCert != "" {
-		url += fmt.Sprintf("&sslrootcert=%s", p.SSLRootCert)
+		dsn += "&sslrootcert=" + p.SSLRootCert
 	}
 	if p.SSLKey != "" {
-		url += fmt.Sprintf("&sslkey=%s", p.SSLKey)
+		dsn += "&sslkey=" + p.SSLKey
 	}
 	if p.SSLCert != "" {
-		url += fmt.Sprintf("&sslcert=%s", p.SSLCert)
+		dsn += "&sslcert=" + p.SSLCert
 	}
-
-	return url
+	return dsn
 }
