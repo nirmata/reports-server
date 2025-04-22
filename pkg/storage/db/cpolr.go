@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"sync"
-	"time"
 
 	"github.com/kyverno/reports-server/pkg/storage/api"
 	"k8s.io/klog/v2"
@@ -17,24 +15,24 @@ import (
 
 type cpolrdb struct {
 	sync.Mutex
-	DB        *MultiDB
+	MultiDB   *MultiDB
 	clusterId string
 }
 
-func NewClusterPolicyReportStore(DB *MultiDB, clusterId string) (api.ClusterPolicyReportsInterface, error) {
-	_, err := DB.primaryDB.Exec("CREATE TABLE IF NOT EXISTS clusterpolicyreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
+func NewClusterPolicyReportStore(MultiDB *MultiDB, clusterId string) (api.ClusterPolicyReportsInterface, error) {
+	_, err := MultiDB.PrimaryDB.Exec("CREATE TABLE IF NOT EXISTS clusterpolicyreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
 	if err != nil {
 		klog.ErrorS(err, "failed to create table")
 		return nil, err
 	}
 
-	_, err = primaryDB.Exec("CREATE INDEX IF NOT EXISTS clusterpolicyreportcluster ON clusterpolicyreports(clusterId)")
+	_, err = MultiDB.PrimaryDB.Exec("CREATE INDEX IF NOT EXISTS clusterpolicyreportcluster ON clusterpolicyreports(clusterId)")
 	if err != nil {
 		klog.ErrorS(err, "failed to create index")
 		return nil, err
 	}
 
-	return &cpolrdb{primaryDB: primaryDB, readReplicaDBs: readReplicaDBs, clusterId: clusterId}, nil
+	return &cpolrdb{MultiDB: MultiDB, clusterId: clusterId}, nil
 }
 
 func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, error) {
@@ -141,51 +139,4 @@ func (c *cpolrdb) Delete(ctx context.Context, name string) error {
 		return fmt.Errorf("delete clusterpolicyreport: %v", err)
 	}
 	return nil
-}
-
-func (c *cpolrdb) ReadQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	c.Lock()
-	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
-	c.Unlock()
-
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
-
-	for _, readReplicaDB := range replicas {
-		rows, err := readReplicaDB.Query(query, args...)
-		if err != nil {
-			klog.ErrorS(err, "failed to query read replica due to : ", err)
-			klog.Info("retrying with next read replica")
-			continue
-		}
-		return rows, nil
-	}
-
-	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.Query(query, args...)
-}
-
-func (c *cpolrdb) ReadQueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	c.Lock()
-	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
-	c.Unlock()
-
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
-
-	for _, readReplicaDB := range replicas {
-		row := readReplicaDB.QueryRow(query, args...)
-		if row.Err() != nil {
-			klog.ErrorS(row.Err(), "failed to query read replica due to : ", row.Err())
-			klog.Info("retrying with next read replica")
-			continue
-		}
-
-		return row
-	}
-
-	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.QueryRow(query, args...)
 }
