@@ -20,23 +20,23 @@ type polrdb struct {
 }
 
 func NewPolicyReportStore(MultiDB *MultiDB, clusterId string) (api.PolicyReportsInterface, error) {
-	_, err := primaryDB.Exec("CREATE TABLE IF NOT EXISTS policyreports (name VARCHAR NOT NULL, namespace VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, namespace, clusterId))")
+	_, err := MultiDB.PrimaryDB.Exec("CREATE TABLE IF NOT EXISTS policyreports (name VARCHAR NOT NULL, namespace VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, namespace, clusterId))")
 	if err != nil {
 		klog.ErrorS(err, "failed to create table")
 		return nil, err
 	}
 
-	_, err = primaryDB.Exec("CREATE INDEX IF NOT EXISTS policyreportnamespace ON policyreports(namespace)")
+	_, err = MultiDB.PrimaryDB.Exec("CREATE INDEX IF NOT EXISTS policyreportnamespace ON policyreports(namespace)")
 	if err != nil {
 		klog.ErrorS(err, "failed to create index")
 		return nil, err
 	}
-	_, err = primaryDB.Exec("CREATE INDEX IF NOT EXISTS policyreportcluster ON policyreports(clusterId)")
+	_, err = MultiDB.PrimaryDB.Exec("CREATE INDEX IF NOT EXISTS policyreportcluster ON policyreports(clusterId)")
 	if err != nil {
 		klog.ErrorS(err, "failed to create index")
 		return nil, err
 	}
-	return &polrdb{primaryDB: primaryDB, readReplicaDBs: readReplicaDBs, clusterId: clusterId}, nil
+	return &polrdb{MultiDB: MultiDB, clusterId: clusterId}, nil
 }
 
 func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.PolicyReport, error) {
@@ -47,9 +47,9 @@ func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.Policy
 	var err error
 
 	if len(namespace) == 0 {
-		rows, err = p.ReadQuery(ctx, "SELECT report FROM policyreports WHERE clusterId = $1", p.clusterId)
+		rows, err = p.MultiDB.ReadQuery(ctx, "SELECT report FROM policyreports WHERE clusterId = $1", p.clusterId)
 	} else {
-		rows, err = p.ReadQuery(ctx, "SELECT report FROM policyreports WHERE namespace = $1 AND clusterId = $2", namespace, p.clusterId)
+		rows, err = p.MultiDB.ReadQuery(ctx, "SELECT report FROM policyreports WHERE namespace = $1 AND clusterId = $2", namespace, p.clusterId)
 	}
 
 	if err != nil {
@@ -78,7 +78,7 @@ func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.Policy
 func (p *polrdb) Get(ctx context.Context, name, namespace string) (*v1alpha2.PolicyReport, error) {
 	var jsonb string
 
-	row := p.ReadQueryRow(ctx, "SELECT report FROM policyreports WHERE (namespace = $1) AND (name = $2) AND (clusterId = $3)", namespace, name, p.clusterId)
+	row := p.MultiDB.ReadQueryRow(ctx, "SELECT report FROM policyreports WHERE (namespace = $1) AND (name = $2) AND (clusterId = $3)", namespace, name, p.clusterId)
 	if err := row.Scan(&jsonb); err != nil {
 		klog.ErrorS(err, fmt.Sprintf("policyreport not found name=%s namespace=%s", name, namespace))
 		if err == sql.ErrNoRows {
@@ -110,7 +110,7 @@ func (p *polrdb) Create(ctx context.Context, polr *v1alpha2.PolicyReport) error 
 		return err
 	}
 
-	_, err = p.primaryDB.Exec("INSERT INTO policyreports (name, namespace, report, clusterId) VALUES ($1, $2, $3, $4)", polr.Name, polr.Namespace, string(jsonb), p.clusterId)
+	_, err = p.MultiDB.PrimaryDB.Exec("INSERT INTO policyreports (name, namespace, report, clusterId) VALUES ($1, $2, $3, $4)", polr.Name, polr.Namespace, string(jsonb), p.clusterId)
 	if err != nil {
 		klog.ErrorS(err, "failed to create policy report")
 		return fmt.Errorf("create policyreport: %v", err)
@@ -131,7 +131,7 @@ func (p *polrdb) Update(ctx context.Context, polr *v1alpha2.PolicyReport) error 
 		return err
 	}
 
-	_, err = p.primaryDB.Exec("UPDATE policyreports SET report = $1 WHERE (namespace = $2) AND (name = $3) AND (clusterId = $4)", string(jsonb), polr.Namespace, polr.Name, p.clusterId)
+	_, err = p.MultiDB.PrimaryDB.Exec("UPDATE policyreports SET report = $1 WHERE (namespace = $2) AND (name = $3) AND (clusterId = $4)", string(jsonb), polr.Namespace, polr.Name, p.clusterId)
 	if err != nil {
 		klog.ErrorS(err, "failed to update policy report")
 		return fmt.Errorf("update policyreport: %v", err)
@@ -143,7 +143,7 @@ func (p *polrdb) Delete(ctx context.Context, name, namespace string) error {
 	p.Lock()
 	defer p.Unlock()
 
-	_, err := p.primaryDB.Exec("DELETE FROM policyreports WHERE (namespace = $1) AND (name = $2) AND (clusterId = $3)", namespace, name, p.clusterId)
+	_, err := p.MultiDB.PrimaryDB.Exec("DELETE FROM policyreports WHERE (namespace = $1) AND (name = $2) AND (clusterId = $3)", namespace, name, p.clusterId)
 	if err != nil {
 		klog.ErrorS(err, "failed to delete policy report")
 		return fmt.Errorf("delete policyreport: %v", err)
