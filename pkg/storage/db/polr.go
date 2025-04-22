@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"sync"
-	"time"
 
 	"github.com/kyverno/reports-server/pkg/storage/api"
 	"k8s.io/klog/v2"
@@ -17,12 +15,11 @@ import (
 
 type polrdb struct {
 	sync.Mutex
-	primaryDB      *sql.DB
-	readReplicaDBs []*sql.DB
-	clusterId      string
+	MultiDB   *MultiDB
+	clusterId string
 }
 
-func NewPolicyReportStore(primaryDB *sql.DB, readReplicaDBs []*sql.DB, clusterId string) (api.PolicyReportsInterface, error) {
+func NewPolicyReportStore(MultiDB *MultiDB, clusterId string) (api.PolicyReportsInterface, error) {
 	_, err := primaryDB.Exec("CREATE TABLE IF NOT EXISTS policyreports (name VARCHAR NOT NULL, namespace VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, namespace, clusterId))")
 	if err != nil {
 		klog.ErrorS(err, "failed to create table")
@@ -152,50 +149,4 @@ func (p *polrdb) Delete(ctx context.Context, name, namespace string) error {
 		return fmt.Errorf("delete policyreport: %v", err)
 	}
 	return nil
-}
-
-func (c *polrdb) ReadQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	c.Lock()
-	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
-	c.Unlock()
-
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
-
-	for _, readReplicaDB := range replicas {
-		rows, err := readReplicaDB.Query(query, args...)
-		if err != nil {
-			klog.ErrorS(err, "failed to query read replica due to : ", err)
-			klog.Info("retrying with next read replica")
-			continue
-		}
-		return rows, nil
-	}
-
-	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.Query(query, args...)
-}
-
-func (c *polrdb) ReadQueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	c.Lock()
-	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
-	c.Unlock()
-
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
-
-	for _, readReplicaDB := range replicas {
-		row := readReplicaDB.QueryRow(query, args...)
-		if row.Err() != nil {
-			klog.ErrorS(row.Err(), "failed to query read replica due to : ", row.Err())
-			klog.Info("retrying with next read replica")
-			continue
-		}
-		return row
-	}
-
-	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.QueryRow(query, args...)
 }
