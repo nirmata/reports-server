@@ -17,12 +17,11 @@ import (
 
 type cpolrdb struct {
 	sync.Mutex
-	primaryDB      *sql.DB
-	readReplicaDBs []*sql.DB
-	clusterId      string
+	DB        *MultiDB
+	clusterId string
 }
 
-func NewClusterPolicyReportStore(primaryDB *sql.DB, readReplicaDBs []*sql.DB, clusterId string) (api.ClusterPolicyReportsInterface, error) {
+func NewClusterPolicyReportStore(DB *MultiDB, clusterId string) (api.ClusterPolicyReportsInterface, error) {
 	_, err := primaryDB.Exec("CREATE TABLE IF NOT EXISTS clusterpolicyreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
 	if err != nil {
 		klog.ErrorS(err, "failed to create table")
