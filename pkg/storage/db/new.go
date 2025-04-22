@@ -52,7 +52,7 @@ func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
 	multiDB := NewMultiDB(primaryDB, readReplicas)
 
 	klog.Info("starting reports store")
-	polrstore, err := NewPolicyReportStore(primaryDB, readReplicas, clusterId)
+	polrstore, err := NewPolicyReportStore(multiDB, clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("policy report store: %w", err)
 	}
@@ -64,13 +64,13 @@ func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
 	}
 
 	klog.Info("starting ephemeral report store")
-	ephrstore, err := NewEphemeralReportStore(primaryDB, readReplicas, clusterId)
+	ephrstore, err := NewEphemeralReportStore(multiDB, clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("ephemeral report store: %w", err)
 	}
 
 	klog.Info("starting cluster ephemeral report store")
-	cephrstore, err := NewClusterEphemeralReportStore(primaryDB, readReplicas, clusterId)
+	cephrstore, err := NewClusterEphemeralReportStore(multiDB, clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("cluster ephemeral report store: %w", err)
 	}
