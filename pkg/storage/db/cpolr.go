@@ -22,7 +22,7 @@ type cpolrdb struct {
 }
 
 func NewClusterPolicyReportStore(DB *MultiDB, clusterId string) (api.ClusterPolicyReportsInterface, error) {
-	_, err := primaryDB.Exec("CREATE TABLE IF NOT EXISTS clusterpolicyreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
+	_, err := DB.primaryDB.Exec("CREATE TABLE IF NOT EXISTS clusterpolicyreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
 	if err != nil {
 		klog.ErrorS(err, "failed to create table")
 		return nil, err
