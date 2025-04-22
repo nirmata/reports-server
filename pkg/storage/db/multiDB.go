@@ -46,10 +46,10 @@ func (m *MultiDB) ReadQuery(ctx context.Context, query string, args ...interface
 	return m.PrimaryDB.Query(query, args...)
 }
 
-func (c *cpolrdb) ReadQueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	c.Lock()
-	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
-	c.Unlock()
+func (m *MultiDB) ReadQueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	m.Lock()
+	replicas := append([]*sql.DB(nil), m.readReplicaDBs...)
+	m.Unlock()
 
 	source := rand.NewSource(time.Now().UnixNano())
 	rng := rand.New(source)
@@ -67,5 +67,5 @@ func (c *cpolrdb) ReadQueryRow(ctx context.Context, query string, args ...interf
 	}
 
 	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.QueryRow(query, args...)
+	return m.primaryDB.QueryRow(query, args...)
 }
