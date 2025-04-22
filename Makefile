@@ -272,6 +272,31 @@ install-pss-policies: $(HELM)
 		--set=background=true \
 		--set=validationFailureAction=Audit
 
+.PHONY: kind-install-with-pss-postgres
+kind-install-with-pss-postgres: $(HELM) kind-load
+	@echo "Installing reports‑server with PostgreSQL and PSS policies…" >&2
+	@set -euo pipefail; \
+	echo "+ helm upgrade --install reports-server …"; \
+	$(HELM) upgrade --install reports-server --namespace reports-server --create-namespace --wait ./charts/reports-server \
+		--set image.registry=$(KO_REGISTRY) \
+		--set image.repository=$(PACKAGE) \
+		--set image.tag=$(GIT_SHA) \
+		--set postgresql.enabled=true \
+		--set config.etcd.enabled=false \
+		--set config.db.host=jigar-final-database.cwrctbeivthx.us-west-2.rds.amazonaws.com \
+		--set config.db.name=postgres \
+		--set config.db.port=5432 \
+		--set config.db.user=postgres \
+		--set config.db.password=postgres \
+		--set config.db.database=postgres \
+		--set config.db.readReplicaHosts={postgres-read-replica.cwrctbeivthx.us-west-2.rds.amazonaws.com}; \
+	echo "Installing PSS policies…" >&2; \
+	helm repo add kyverno https://kyverno.github.io/kyverno/; \
+	$(HELM) upgrade --install kyverno-policies kyverno/kyverno-policies \
+		--set podSecurityStandard=restricted \
+		--set background=true \
+		--set validationFailureAction=Audit
+
 ########
 # HELP #
 ########
