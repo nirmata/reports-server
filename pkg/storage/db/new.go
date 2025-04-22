@@ -20,7 +20,6 @@ const (
 func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
 	klog.Infof("starting postgres db (primary host %q)", config.Host)
 
-	// 1) Open primary
 	primaryDB, err := sql.Open("pgx", config.String())
 	if err != nil {
 		klog.ErrorS(err, "failed to open primary db")
@@ -31,7 +30,6 @@ func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
 	}
 	klog.Info("successfully connected to primary db")
 
-	// 2) Open read-replicas
 	var readReplicas []*sql.DB
 	for _, host := range config.ReadReplicaHosts {
 		replicaCfg := *config
@@ -51,7 +49,8 @@ func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
 		readReplicas = append(readReplicas, replicaDB)
 	}
 
-	// 3) Initialize all stores with the same primary + replicas
+	multiDB := NewMultiDB(primaryDB, readReplicas)
+
 	klog.Info("starting reports store")
 	polrstore, err := NewPolicyReportStore(primaryDB, readReplicas, clusterId)
 	if err != nil {
@@ -59,7 +58,7 @@ func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
 	}
 
 	klog.Info("starting cluster policy report store")
-	cpolrstore, err := NewClusterPolicyReportStore(primaryDB, readReplicas, clusterId)
+	cpolrstore, err := NewClusterPolicyReportStore(multiDB, clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("cluster policy report store: %w", err)
 	}
