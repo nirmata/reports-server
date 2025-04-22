@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"sync"
-	"time"
 
 	reportsv1 "github.com/kyverno/kyverno/api/reports/v1"
 	"github.com/kyverno/reports-server/pkg/storage/api"
@@ -17,30 +15,29 @@ import (
 
 type ephrdb struct {
 	sync.Mutex
-	primaryDB      *sql.DB
-	readReplicaDBs []*sql.DB
-	clusterId      string
+	MultiDB   *MultiDB
+	clusterId string
 }
 
-func NewEphemeralReportStore(primaryDB *sql.DB, readReplicaDBs []*sql.DB, clusterId string) (api.EphemeralReportsInterface, error) {
-	_, err := primaryDB.Exec("CREATE TABLE IF NOT EXISTS ephemeralreports (name VARCHAR NOT NULL, namespace VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, namespace, clusterId))")
+func NewEphemeralReportStore(MultiDB *MultiDB, clusterId string) (api.EphemeralReportsInterface, error) {
+	_, err := MultiDB.PrimaryDB.Exec("CREATE TABLE IF NOT EXISTS ephemeralreports (name VARCHAR NOT NULL, namespace VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, namespace, clusterId))")
 	if err != nil {
 		klog.ErrorS(err, "failed to create table")
 		return nil, err
 	}
 
-	_, err = primaryDB.Exec("CREATE INDEX IF NOT EXISTS ephemeralreportnamespace ON ephemeralreports(namespace)")
+	_, err = MultiDB.PrimaryDB.Exec("CREATE INDEX IF NOT EXISTS ephemeralreportnamespace ON ephemeralreports(namespace)")
 	if err != nil {
 		klog.ErrorS(err, "failed to create index")
 		return nil, err
 	}
 
-	_, err = primaryDB.Exec("CREATE INDEX IF NOT EXISTS ephemeralreportcluster ON ephemeralreports(clusterId)")
+	_, err = MultiDB.PrimaryDB.Exec("CREATE INDEX IF NOT EXISTS ephemeralreportcluster ON ephemeralreports(clusterId)")
 	if err != nil {
 		klog.ErrorS(err, "failed to create index")
 		return nil, err
 	}
-	return &ephrdb{primaryDB: primaryDB, readReplicaDBs: readReplicaDBs, clusterId: clusterId}, nil
+	return &ephrdb{MultiDB: MultiDB, clusterId: clusterId}, nil
 }
 
 func (p *ephrdb) List(ctx context.Context, namespace string) ([]*reportsv1.EphemeralReport, error) {
@@ -152,50 +149,4 @@ func (p *ephrdb) Delete(ctx context.Context, name, namespace string) error {
 		return fmt.Errorf("delete ephemeralreport: %v", err)
 	}
 	return nil
-}
-
-func (c *ephrdb) ReadQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	c.Lock()
-	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
-	c.Unlock()
-
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
-
-	for _, readReplicaDB := range replicas {
-		rows, err := readReplicaDB.Query(query, args...)
-		if err != nil {
-			klog.ErrorS(err, "failed to query read replica due to : ", err)
-			klog.Info("retrying with next read replica")
-			continue
-		}
-		return rows, nil
-	}
-
-	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.Query(query, args...)
-}
-
-func (c *ephrdb) ReadQueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	c.Lock()
-	replicas := append([]*sql.DB(nil), c.readReplicaDBs...)
-	c.Unlock()
-
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
-
-	for _, readReplicaDB := range replicas {
-		row := readReplicaDB.QueryRow(query, args...)
-		if row.Err() != nil {
-			klog.ErrorS(row.Err(), "failed to query read replica due to : ", row.Err())
-			klog.Info("retrying with next read replica")
-			continue
-		}
-		return row
-	}
-
-	klog.Info("no read replicas available, querying primary db")
-	return c.primaryDB.QueryRow(query, args...)
 }
