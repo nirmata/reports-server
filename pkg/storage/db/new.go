@@ -18,71 +18,64 @@ const (
 )
 
 func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
-	klog.Infof("DB: Starting database initialization for cluster: %s", clusterId)
-	klog.Infof("DB: Connecting to primary database at host: %s", config.Host)
+	klog.Infof("starting postgres db (primary host %q)", config.Host)
 
 	primaryDB, err := sql.Open("pgx", config.String())
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to open primary database connection")
+		klog.ErrorS(err, "failed to open primary db")
 		return nil, err
 	}
 	if err := pingWithRetry(primaryDB); err != nil {
-		klog.ErrorS(err, "DB: Failed to establish connection with primary database")
 		return nil, err
 	}
-	klog.Info("DB: Successfully connected to primary database")
+	klog.Info("successfully connected to primary db")
 
 	var readReplicas []*sql.DB
-	for i, host := range config.ReadReplicaHosts {
+	for _, host := range config.ReadReplicaHosts {
 		replicaCfg := *config
 		replicaCfg.Host = host
 		dsn := replicaCfg.String()
 
-		klog.Infof("DB: Connecting to read replica %d at host: %s", i+1, host)
+		klog.Infof("starting postgres read‑replica db (host %q)", host)
 		replicaDB, err := sql.Open("pgx", dsn)
 		if err != nil {
-			klog.ErrorS(err, "DB: Failed to open read replica connection", "host", host)
+			klog.ErrorS(err, "failed to open replica db", "host", host)
 			return nil, err
 		}
 		if err := pingWithRetry(replicaDB); err != nil {
-			klog.ErrorS(err, "DB: Failed to establish connection with read replica", "host", host)
 			return nil, err
 		}
-		klog.Infof("DB: Successfully connected to read replica %d at host: %s", i+1, host)
+		klog.Infof("connected to replica %q", host)
 		readReplicas = append(readReplicas, replicaDB)
 	}
 
 	multiDB := NewMultiDB(primaryDB, readReplicas)
 
-	klog.Info("DB: Initializing PolicyReportStore")
+	klog.Info("starting reports store")
 	polrstore, err := NewPolicyReportStore(multiDB, clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to initialize PolicyReportStore")
 		return nil, fmt.Errorf("policy report store: %w", err)
 	}
 
-	klog.Info("DB: Initializing ClusterPolicyReportStore")
+	klog.Info("starting cluster policy report store")
 	cpolrstore, err := NewClusterPolicyReportStore(multiDB, clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to initialize ClusterPolicyReportStore")
 		return nil, fmt.Errorf("cluster policy report store: %w", err)
 	}
 
-	klog.Info("DB: Initializing EphemeralReportStore")
+	klog.Info("starting ephemeral report store")
 	ephrstore, err := NewEphemeralReportStore(multiDB, clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to initialize EphemeralReportStore")
 		return nil, fmt.Errorf("ephemeral report store: %w", err)
 	}
 
-	klog.Info("DB: Initializing ClusterEphemeralReportStore")
+	klog.Info("starting cluster ephemeral report store")
 	cephrstore, err := NewClusterEphemeralReportStore(multiDB, clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to initialize ClusterEphemeralReportStore")
 		return nil, fmt.Errorf("cluster ephemeral report store: %w", err)
 	}
 
-	klog.Info("DB: Successfully completed database initialization")
+	klog.Info("successfully setup storage")
 	return &postgresstore{
 		db:         primaryDB,
 		polrstore:  polrstore,
@@ -95,16 +88,15 @@ func New(config *PostgresConfig, clusterId string) (api.Storage, error) {
 // pingWithRetry tries db.PingContext up to maxRetries with sleep.
 func pingWithRetry(db *sql.DB) error {
 	for i := 1; i <= maxRetries; i++ {
-		klog.Infof("DB: Pinging database (attempt %d/%d)", i, maxRetries)
+		klog.Infof("pinging db (attempt %d/%d)", i, maxRetries)
 		if err := db.PingContext(context.Background()); err != nil {
-			klog.ErrorS(err, "DB: Ping failed")
+			klog.ErrorS(err, "ping failed")
 			time.Sleep(sleepDuration)
 			continue
 		}
-		klog.Info("DB: Ping successful")
 		return nil
 	}
-	return fmt.Errorf("DB: Could not connect after %d attempts", maxRetries)
+	return fmt.Errorf("could not connect after %d attempts", maxRetries)
 }
 
 type postgresstore struct {
@@ -132,12 +124,10 @@ func (p *postgresstore) EphemeralReports() api.EphemeralReportsInterface {
 }
 
 func (p *postgresstore) Ready() bool {
-	klog.Info("DB: Checking database readiness")
 	if err := p.db.PingContext(context.Background()); err != nil {
-		klog.ErrorS(err, "DB: Failed to ping primary database")
+		klog.ErrorS(err, "failed to ping primary db")
 		return false
 	}
-	klog.Info("DB: Database is ready")
 	return true
 }
 

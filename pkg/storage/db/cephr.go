@@ -20,63 +20,57 @@ type cephr struct {
 }
 
 func NewClusterEphemeralReportStore(MultiDB *MultiDB, clusterId string) (api.ClusterEphemeralReportsInterface, error) {
-	klog.Infof("DB: Initializing ClusterEphemeralReportStore for cluster: %s", clusterId)
 	_, err := MultiDB.PrimaryDB.Exec("CREATE TABLE IF NOT EXISTS clusterephemeralreports (name VARCHAR NOT NULL, clusterId VARCHAR NOT NULL, report JSONB NOT NULL, PRIMARY KEY(name, clusterId))")
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to create clusterephemeralreports table")
+		klog.ErrorS(err, "failed to create table")
 		return nil, err
 	}
 
 	_, err = MultiDB.PrimaryDB.Exec("CREATE INDEX IF NOT EXISTS clusterephemeralreportcluster ON clusterephemeralreports(clusterId)")
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to create clusterephemeralreports index")
+		klog.ErrorS(err, "failed to create index")
 		return nil, err
 	}
 
-	klog.Infof("DB: Successfully initialized ClusterEphemeralReportStore for cluster: %s", clusterId)
 	return &cephr{MultiDB: MultiDB, clusterId: clusterId}, nil
 }
 
 func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, error) {
-	klog.Infof("DB: Starting List operation for ClusterEphemeralReports with clusterId: %s", c.clusterId)
+	klog.Infof("listing all values")
 	res := make([]*reportsv1.ClusterEphemeralReport, 0)
 	var jsonb string
 
-	klog.Infof("DB: Executing read query for clusterId: %s", c.clusterId)
 	rows, err := c.MultiDB.ReadQuery(ctx, "SELECT report FROM clusterephemeralreports WHERE (clusterId = $1)", c.clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to list clusterephemeralreports")
+		klog.ErrorS(err, "failed to list clusterephemeralreports")
 		return nil, fmt.Errorf("clusterephemeralreports list: %v", err)
 	}
 	defer rows.Close()
 
-	var count int
 	for rows.Next() {
-		count++
 		if err := rows.Scan(&jsonb); err != nil {
-			klog.ErrorS(err, "DB: Failed to scan row %d", count)
+			klog.ErrorS(err, "failed to scan rows")
 			return nil, fmt.Errorf("clusterephemeralreports list: %v", err)
 		}
 		var report reportsv1.ClusterEphemeralReport
 		err := json.Unmarshal([]byte(jsonb), &report)
 		if err != nil {
-			klog.ErrorS(err, "DB: Failed to unmarshal clusterephemeralreports for row %d", count)
+			klog.ErrorS(err, "failed to unmarshal clusterephemeralreports")
 			return nil, fmt.Errorf("clusterephemeralreports list: cannot convert jsonb to clusterephemeralreports: %v", err)
 		}
 		res = append(res, &report)
 	}
 
-	klog.Infof("DB: List operation completed. Successfully retrieved %d reports", len(res))
+	klog.Infof("list found length: %d", len(res))
 	return res, nil
 }
 
 func (c *cephr) Get(ctx context.Context, name string) (*reportsv1.ClusterEphemeralReport, error) {
-	klog.Infof("DB: Starting Get operation for ClusterEphemeralReport name=%s clusterId=%s", name, c.clusterId)
 	var jsonb string
 
 	row := c.MultiDB.ReadQueryRow(ctx, "SELECT report FROM clusterephemeralreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
 	if err := row.Scan(&jsonb); err != nil {
-		klog.ErrorS(err, "DB: ClusterEphemeralReport not found name=%s clusterId=%s", name, c.clusterId)
+		klog.ErrorS(err, fmt.Sprintf("clusterephemeralreport not found name=%s", name))
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("clusterephemeralreport get %s: no such ephemeral report", name)
 		}
@@ -86,10 +80,9 @@ func (c *cephr) Get(ctx context.Context, name string) (*reportsv1.ClusterEphemer
 	var report reportsv1.ClusterEphemeralReport
 	err := json.Unmarshal([]byte(jsonb), &report)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to unmarshal report")
+		klog.ErrorS(err, "failed to unmarshal report")
 		return nil, fmt.Errorf("clusterephemeralreport list: cannot convert jsonb to ephemeralreport: %v", err)
 	}
-	klog.Infof("DB: Successfully retrieved ClusterEphemeralReport name=%s", name)
 	return &report, nil
 }
 
@@ -101,19 +94,18 @@ func (c *cephr) Create(ctx context.Context, cephr *reportsv1.ClusterEphemeralRep
 		return errors.New("invalid cluster ephemeral report")
 	}
 
-	klog.Infof("DB: Creating entry in primary database for key:%s", cephr.Name)
+	klog.Infof("creating entry for key:%s", cephr.Name)
 	jsonb, err := json.Marshal(*cephr)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to marshal cephr")
+		klog.ErrorS(err, "failed to unmarshal cephr")
 		return err
 	}
 
 	_, err = c.MultiDB.PrimaryDB.Exec("INSERT INTO clusterephemeralreports (name, report, clusterId) VALUES ($1, $2, $3)", cephr.Name, string(jsonb), c.clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to create cephr in primary database")
+		klog.ErrorS(err, "failed to crate cephr")
 		return fmt.Errorf("create clusterephemeralreport: %v", err)
 	}
-	klog.Infof("DB: Successfully created entry in primary database for key:%s", cephr.Name)
 	return nil
 }
 
@@ -125,19 +117,16 @@ func (c *cephr) Update(ctx context.Context, cephr *reportsv1.ClusterEphemeralRep
 		return errors.New("invalid cluster ephemeral report")
 	}
 
-	klog.Infof("DB: Updating entry in primary database for key:%s", cephr.Name)
 	jsonb, err := json.Marshal(*cephr)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to marshal cephr")
 		return err
 	}
 
 	_, err = c.MultiDB.PrimaryDB.Exec("UPDATE clusterephemeralreports SET report = $1 WHERE (name = $2) AND (clusterId = $3)", string(jsonb), cephr.Name, c.clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to update cephr in primary database")
+		klog.ErrorS(err, "failed to updates cephr")
 		return fmt.Errorf("update clusterephemeralreport: %v", err)
 	}
-	klog.Infof("DB: Successfully updated entry in primary database for key:%s", cephr.Name)
 	return nil
 }
 
@@ -145,12 +134,10 @@ func (c *cephr) Delete(ctx context.Context, name string) error {
 	c.Lock()
 	defer c.Unlock()
 
-	klog.Infof("DB: Deleting entry from primary database for key:%s", name)
 	_, err := c.MultiDB.PrimaryDB.Exec("DELETE FROM clusterephemeralreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
 	if err != nil {
-		klog.ErrorS(err, "DB: Failed to delete cephr from primary database")
+		klog.ErrorS(err, "failed to delete cephr")
 		return fmt.Errorf("delete clusterephemeralreport: %v", err)
 	}
-	klog.Infof("DB: Successfully deleted entry from primary database for key:%s", name)
 	return nil
 }
