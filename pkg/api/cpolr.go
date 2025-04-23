@@ -52,25 +52,21 @@ func (c *cpolrStore) NewList() runtime.Object {
 }
 
 func (c *cpolrStore) List(ctx context.Context, options *metainternalversion.ListOptions) (runtime.Object, error) {
+	klog.Infof("API: Starting List operation for ClusterPolicyReports")
+	klog.Infof("API: List options - LabelSelector: %v, ResourceVersion: %s", options.LabelSelector, options.ResourceVersion)
+
 	var labelSelector labels.Selector
-	// fieldSelector := fields.Everything() // TODO: Field selectors
 	if options != nil {
 		if options.LabelSelector != nil {
 			labelSelector = options.LabelSelector
 		}
-		// if options.FieldSelector != nil {
-		// 	fieldSelector = options.FieldSelector
-		// }
 	}
-	klog.Infof("listing all cluster policy reports")
+	klog.Infof("API: Listing all cluster policy reports with label selector: %v", labelSelector)
 	list, err := c.listCpolr()
 	if err != nil {
+		klog.ErrorS(err, "API: Failed to list resource clusterpolicyreport")
 		return nil, errors.NewBadRequest("failed to list resource clusterpolicyreport")
 	}
-
-	// if labelSelector.String() == labels.Everything().String() {
-	// 	return list, nil
-	// }
 
 	cpolrList := &v1alpha2.ClusterPolicyReportList{
 		Items:    make([]v1alpha2.ClusterPolicyReport, 0),
@@ -82,6 +78,7 @@ func (c *cpolrStore) List(ctx context.Context, options *metainternalversion.List
 	} else {
 		desiredRv, err = strconv.ParseUint(options.ResourceVersion, 10, 64)
 		if err != nil {
+			klog.ErrorS(err, "API: Failed to parse resource version")
 			return nil, err
 		}
 	}
@@ -90,6 +87,7 @@ func (c *cpolrStore) List(ctx context.Context, options *metainternalversion.List
 	for _, cpolr := range list.Items {
 		allow, rv, err := allowObjectListWatch(cpolr.ObjectMeta, labelSelector, desiredRv, options.ResourceVersionMatch)
 		if err != nil {
+			klog.ErrorS(err, "API: Failed to check if object should be included in list")
 			return nil, err
 		}
 		if rv > resourceVersion {
@@ -100,7 +98,7 @@ func (c *cpolrStore) List(ctx context.Context, options *metainternalversion.List
 		}
 	}
 	cpolrList.ListMeta.ResourceVersion = strconv.FormatUint(resourceVersion, 10)
-	klog.Infof("filtered list found length: %d", len(cpolrList.Items))
+	klog.Infof("API: List operation completed. Found %d items", len(cpolrList.Items))
 	return cpolrList, nil
 }
 

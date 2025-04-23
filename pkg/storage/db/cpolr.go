@@ -36,31 +36,35 @@ func NewClusterPolicyReportStore(MultiDB *MultiDB, clusterId string) (api.Cluste
 }
 
 func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, error) {
-	klog.Infof("listing all values")
+	klog.Infof("DB: Starting List operation for ClusterPolicyReports with clusterId: %s", c.clusterId)
 	res := make([]*v1alpha2.ClusterPolicyReport, 0)
 	var jsonb string
 
+	klog.Infof("DB: Executing read query on read replica for clusterId: %s", c.clusterId)
 	rows, err := c.MultiDB.ReadQuery(ctx, "SELECT report FROM clusterpolicyreports WHERE clusterId = $1", c.clusterId)
 	if err != nil {
-		klog.ErrorS(err, "failed to list clusterpolicyreports")
+		klog.ErrorS(err, "DB: Failed to list clusterpolicyreports from read replica")
 		return nil, fmt.Errorf("clusterpolicyreport list: %v", err)
 	}
 	defer rows.Close()
+
+	var count int
 	for rows.Next() {
+		count++
 		if err := rows.Scan(&jsonb); err != nil {
-			klog.ErrorS(err, "failed to scan rows")
+			klog.ErrorS(err, "DB: Failed to scan row %d", count)
 			return nil, fmt.Errorf("clusterpolicyreport list: %v", err)
 		}
 		var report v1alpha2.ClusterPolicyReport
 		err := json.Unmarshal([]byte(jsonb), &report)
 		if err != nil {
-			klog.ErrorS(err, "failed to unmarshal clusterpolicyreport")
+			klog.ErrorS(err, "DB: Failed to unmarshal clusterpolicyreport for row %d", count)
 			return nil, fmt.Errorf("clusterpolicyreport list: cannot convert jsonb to clusterpolicyreport: %v", err)
 		}
 		res = append(res, &report)
 	}
 
-	klog.Infof("list found length: %d", len(res))
+	klog.Infof("DB: List operation completed. Successfully retrieved %d reports from read replica", len(res))
 	return res, nil
 }
 
