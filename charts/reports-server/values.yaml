@@ -192,6 +192,8 @@ config:
     # This value defines the size of the persistent volume claim (PVC) for etcd.
     storage:
 
+    quotaBackendBytes: 1073741824
+
     ## @param nodeSelector [object] Node labels for pod assignment
     ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
     ##
@@ -244,6 +246,11 @@ config:
 
     # -- Database SSL cert
     sslcert: ""
+
+    # -- Volume configuration for RDS certificate
+    sslrds:
+      secretName: ""
+      mountPath: "/etc/ssl/rds"
 
 apiServicesManagement:
   # -- Create a helm hooks to delete api services on uninstall
