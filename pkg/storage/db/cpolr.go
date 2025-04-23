@@ -69,8 +69,6 @@ func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, er
 }
 
 func (c *cpolrdb) Get(ctx context.Context, name string) (*v1alpha2.ClusterPolicyReport, error) {
-	klog.Infof("DB GET: Starting List operation for ClusterPolicyReports with clusterId: %s", c.clusterId)
-
 	var jsonb string
 
 	row := c.MultiDB.ReadQueryRow(ctx, "SELECT report FROM clusterpolicyreports WHERE (name = $1) AND (clusterId = $2)", name, c.clusterId)
