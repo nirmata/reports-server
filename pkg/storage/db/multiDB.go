@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
-	"math/rand"
+	"math/big"
 	"sync"
-	"time"
 
 	"k8s.io/klog/v2"
 )
@@ -28,20 +28,20 @@ func (m *MultiDB) ReadQuery(ctx context.Context, query string, args ...interface
 	replicas := append([]*sql.DB(nil), m.ReadReplicaDBs...)
 	m.Unlock()
 
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
+	// crypto-secure shuffle
+	shuffleReplicas(replicas)
 
+	// try each in turn
 	for _, readReplicaDB := range replicas {
 		rows, err := readReplicaDB.Query(query, args...)
 		if err != nil {
-			klog.ErrorS(err, "failed to query read replica due to : ", err)
-			klog.Info("retrying with next read replica")
+			klog.ErrorS(err, "failed to query read replica, retrying next")
 			continue
 		}
 		return rows, nil
 	}
 
+	// fallback to primary
 	klog.Info("no read replicas available, querying primary db")
 	return m.PrimaryDB.Query(query, args...)
 }
@@ -51,21 +51,32 @@ func (m *MultiDB) ReadQueryRow(ctx context.Context, query string, args ...interf
 	replicas := append([]*sql.DB(nil), m.ReadReplicaDBs...)
 	m.Unlock()
 
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-	rng.Shuffle(len(replicas), func(i, j int) { replicas[i], replicas[j] = replicas[j], replicas[i] })
+	shuffleReplicas(replicas)
 
 	for _, readReplicaDB := range replicas {
 		row := readReplicaDB.QueryRow(query, args...)
-		if row.Err() != nil {
-			klog.ErrorS(row.Err(), "failed to query read replica due to : ", row.Err())
-			klog.Info("retrying with next read replica")
+		if err := row.Err(); err != nil {
+			klog.ErrorS(err, "failed to query read replica, retrying next")
 			continue
 		}
-
 		return row
 	}
 
 	klog.Info("no read replicas available, querying primary db")
 	return m.PrimaryDB.QueryRow(query, args...)
+}
+
+// shuffleReplicas performs an in-place Fisher–Yates shuffle using crypto/rand.
+func shuffleReplicas(replicas []*sql.DB) {
+	n := len(replicas)
+	for i := n - 1; i > 0; i-- {
+		// generate a secure random index j ∈ [0, i]
+		jBig, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
+		if err != nil {
+			// If crypto/rand fails for some reason, just skip shuffling that iteration
+			continue
+		}
+		j := int(jBig.Int64())
+		replicas[i], replicas[j] = replicas[j], replicas[i]
+	}
 }
