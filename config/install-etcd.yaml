@@ -463,7 +463,7 @@ spec:
         - --initial-cluster=etcd-0=$(URI_SCHEME)://etcd-0.$(SERVICE_NAME):2380,etcd-1=$(URI_SCHEME)://etcd-1.$(SERVICE_NAME):2380,etcd-2=$(URI_SCHEME)://etcd-2.$(SERVICE_NAME):2380
         - --initial-advertise-peer-urls=$(URI_SCHEME)://$(HOSTNAME).$(SERVICE_NAME):2380
         - --listen-metrics-urls=http://0.0.0.0:8080
-        - --quota-backend-bytes=2147483648
+        - --quota-backend-bytes=1932735283
         # - --auto-compaction-mode=periodic
         # - --auto-compaction-retention=10m
         # - --client-cert-auth
@@ -499,7 +499,7 @@ spec:
       accessModes: ["ReadWriteOnce"]
       resources:
         requests:
-          storage: 1Gi
+          storage: 2Gi
 ---
 apiVersion: apiregistration.k8s.io/v1
 kind: APIService
