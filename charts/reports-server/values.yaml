@@ -186,13 +186,17 @@ config:
     enabled: true
     endpoints: ~
     insecure: true
-    # Storage configuration for etcd persistence:
+    # PVC Storage configuration for etcd persistence:
     # - Default: If not specified, the chart will allocate 1Gi of storage.
     # - Override: Set a custom storage size (e.g., "2Gi", "5Gi") as needed.
     # This value defines the size of the persistent volume claim (PVC) for etcd.
-    storage:
+    storage: 2Gi
 
-    quotaBackendBytes: 2147483648
+  # Quota for etcd’s internal database (BoltDB) **in bytes**
+  # - What it limits: the logical size of the etcd DB file, *not* the PVC.
+  # - NOTE: keep this **10‑20 % smaller** than `storage`
+  # - Format: plain integer bytes (no Ki/Mi/Gi suffix).
+    quotaBackendBytes: 1932735283
 
     ## @param nodeSelector [object] Node labels for pod assignment
     ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
