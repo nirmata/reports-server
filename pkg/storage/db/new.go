@@ -145,27 +145,26 @@ type PostgresConfig struct {
 }
 
 func (p PostgresConfig) String() string {
-	hosts := strings.Split(p.Host, ",")
 	if p.Port != 0 {
-		for i, h := range hosts {
-			hosts[i] = fmt.Sprintf("%s:%d", h, p.Port)
+		hosts := strings.Split(p.Host, ",")
+		for i, host := range hosts {
+			hosts[i] = fmt.Sprintf("%s:%d", host, p.Port)
 		}
+		p.Host = strings.Join(hosts, ",")
 	}
-	hostPart := strings.Join(hosts, ",")
 
-	// build the base DSN
-	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
-		p.User, p.Password, hostPart, p.DBname, p.SSLMode,
-	)
+	url := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+		p.User, p.Password, p.Host, p.DBname, p.SSLMode)
 
 	if p.SSLRootCert != "" {
-		dsn += "&sslrootcert=" + p.SSLRootCert
+		url += fmt.Sprintf("&sslrootcert=%s", p.SSLRootCert)
 	}
 	if p.SSLKey != "" {
-		dsn += "&sslkey=" + p.SSLKey
+		url += fmt.Sprintf("&sslkey=%s", p.SSLKey)
 	}
 	if p.SSLCert != "" {
-		dsn += "&sslcert=" + p.SSLCert
+		url += fmt.Sprintf("&sslcert=%s", p.SSLCert)
 	}
-	return dsn
+
+	return url
 }
