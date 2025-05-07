@@ -1,6 +1,6 @@
 # reports-server
 
-![Version: 0.1.18-rc.2](https://img.shields.io/badge/Version-0.1.18--rc.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.1.16](https://img.shields.io/badge/AppVersion-v0.1.16-informational?style=flat-square)
+![Version: 0.1.19](https://img.shields.io/badge/Version-0.1.19-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.1.17](https://img.shields.io/badge/AppVersion-v0.1.17-informational?style=flat-square)
 
 TODO
 
