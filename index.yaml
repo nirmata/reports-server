@@ -3,6 +3,31 @@ entries:
   reports-server:
   - apiVersion: v2
     appVersion: v0.1.19
+    created: "2025-05-13T05:54:31.817300961Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: cloudnative-pg
+      repository: https://cloudnative-pg.github.io/charts
+      version: 0.22.0
+    digest: 6a4201c02c84231ee67bb8d48bf2d5da83320f12058060690205a3d854c3ab7e
+    keywords:
+    - kubernetes
+    - policy reports storage
+    - postgresql
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - email: cncf-kyverno-maintainers@lists.cncf.io
+      name: Nirmata
+      url: https://kyverno.io/
+    name: reports-server
+    sources:
+    - https://github.com/nirmata/reports-server
+    type: application
+    urls:
+    - https://nirmata.github.io/reports-server/reports-server-0.1.22-rc.1.tgz
+    version: 0.1.22-rc.1
+  - apiVersion: v2
+    appVersion: v0.1.19
     created: "2025-05-07T12:36:45.262748426Z"
     dependencies:
     - condition: postgresql.enabled
@@ -726,4 +751,4 @@ entries:
     urls:
     - https://kyverno.github.io/reports-server/reports-server-0.1.0-alpha.1.tgz
     version: 0.1.0-alpha.1
-generated: "2025-05-07T12:36:45.251738469Z"
+generated: "2025-05-13T05:54:31.807289768Z"
