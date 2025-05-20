@@ -28,13 +28,13 @@ entries:
     version: 0.1.22
   - apiVersion: v2
     appVersion: v0.1.19
-    created: "2025-05-13T05:54:31.817300961Z"
+    created: "2025-05-20T12:17:17.159110898Z"
     dependencies:
     - condition: postgresql.enabled
       name: cloudnative-pg
       repository: https://cloudnative-pg.github.io/charts
       version: 0.22.0
-    digest: 6a4201c02c84231ee67bb8d48bf2d5da83320f12058060690205a3d854c3ab7e
+    digest: 89d615e988a61e8b20aee2fd61d4bfe294f880f5a855533aa2f417d52186fdb3
     keywords:
     - kubernetes
     - policy reports storage
@@ -776,4 +776,4 @@ entries:
     urls:
     - https://kyverno.github.io/reports-server/reports-server-0.1.0-alpha.1.tgz
     version: 0.1.0-alpha.1
-generated: "2025-05-20T12:17:15.348734545Z"
+generated: "2025-05-20T12:17:17.148848608Z"
