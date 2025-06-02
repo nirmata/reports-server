@@ -284,41 +284,6 @@ install-pss-policies: $(HELM)
 		--set=background=true \
 		--set=validationFailureAction=Audit
 
-install-reports-server-db-secret: $(HELM) kind-load ## Build image, load it in kind cluster and deploy helm chart
-	@echo Install reports-server db secret... >&2
-	@$(HELM) template reports-server --namespace reports-server --create-namespace ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set image.repository=$(PACKAGE) \
-		--set config.etcd.enabled=false \
-		--set config.db.secretCreation=true \
-		--set config.db.secretName=reports-server-db-secret \
-		--set config.db.host=jigar-final-database.cwrctbeivthx.us-west-2.rds.amazonaws.com\
-		--set config.db.readReplicaHosts=jigar-final-database.cwrctbeivthx.us-west-2.rds.amazonaws.com \
-		--set config.db.port=5432 \
-		--set config.db.name=postgres \
-		--set config.db.user=postgres \
-		--set config.db.password=postgres \
-		--set image.tag=$(GIT_SHA) \
-			| kubectl apply -f -
-
-
-install-reports-server-withoutdb-secret: $(HELM) kind-load ## Build image, load it in kind cluster and deploy helm chart
-	@echo Install reports-server db secret... >&2
-	@$(HELM) template reports-server --namespace reports-server --create-namespace ./charts/reports-server \
-		--set image.registry=$(KO_REGISTRY) \
-		--set config.etcd.storage=$(ETCD_STORAGE_SIZE) \
-		--set image.repository=$(PACKAGE) \
-		--set config.etcd.enabled=false \
-		--set config.db.host=jigar-final-database.cwrctbeivthx.us-west-2.rds.amazonaws.com\
-		--set config.db.readReplicaHosts=jigar-final-database.cwrctbeivthx.us-west-2.rds.amazonaws.com \
-		--set config.db.port=5432 \
-		--set config.db.name=postgres \
-		--set config.db.user=postgres \
-		--set config.db.password=postgres \
-		--set image.tag=$(GIT_SHA) \
-			| kubectl apply -f -
-
 ########
 # HELP #
 ########
