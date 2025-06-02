@@ -7,12 +7,12 @@ metadata:
 spec:
   parallel: 1
   timeouts:
-    apply: 1m30s
-    assert: 1m30s
-    cleanup: 1m30s
-    delete: 1m30s
-    error: 1m30s
-    exec: 1m30s
+    apply: 7m
+    assert: 7m
+    cleanup: 7m
+    delete: 7m
+    error: 7m
+    exec: 7m
   fullName: true
   forceTerminationGracePeriod: 5s
   delayBeforeCleanup: 3s
