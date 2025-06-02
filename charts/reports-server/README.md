@@ -72,7 +72,7 @@ helm install reports-server --namespace reports-server --create-namespace report
 | config.etcd.image.registry | string | `"ghcr.io"` | Image registry |
 | config.etcd.image.repository | string | `"nirmata/etcd"` | Image repository |
 | config.etcd.image.tag | string | `"v3.5.18-cve-free"` | Image tag |
-| config.etcd.imagePullSecrets | list | `[]` | Image pull secrets |
+| config.etcd.imagePullSecrets | list | `[{"name":"test-registry-secret"}]` | Image pull secrets |
 | config.etcd.enabled | bool | `true` |  |
 | config.etcd.endpoints | string | `nil` |  |
 | config.etcd.insecure | bool | `true` |  |
@@ -80,6 +80,7 @@ helm install reports-server --namespace reports-server --create-namespace report
 | config.etcd.quotaBackendBytes | int | `1932735283` |  |
 | config.etcd.nodeSelector | object | `{}` |  |
 | config.etcd.tolerations | list | `[]` |  |
+| config.db.secretCreation | bool | `true` | If set, a secret will be created with the database connection information. If this is set to true, secretName must be set. |
 | config.db.secretName | string | `""` | If set, database connection information will be read from the Secret with this name. Overrides `db.host`, `db.name`, `db.user`, `db.password` and `db.readReplicaHosts`. |
 | config.db.host | string | `"reports-server-cluster-rw.reports-server"` | Database host |
 | config.db.hostSecretKeyName | string | `"host"` | The database host will be read from this `key` in the specified Secret, when `db.secretName` is set. |
