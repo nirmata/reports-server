@@ -12,6 +12,8 @@ import (
 	"github.com/kyverno/reports-server/pkg/storage"
 	"github.com/kyverno/reports-server/pkg/storage/db"
 	"github.com/kyverno/reports-server/pkg/storage/etcd"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	apimetrics "k8s.io/apiserver/pkg/endpoints/metrics"
@@ -94,10 +96,16 @@ func (c Config) metricsHandler() (http.HandlerFunc, error) {
 	// Register apiserver metrics in legacy registry
 	apimetrics.Register()
 
-	// Return handler that serves metrics from both legacy and Metrics Server registry
+	combinedGatherer := prometheus.Gatherers{
+		legacyregistry.DefaultGatherer,
+		registry,
+	}
+
+	// Use a single handler from promhttp that serves the combined set
+	handler := promhttp.HandlerFor(combinedGatherer, promhttp.HandlerOpts{})
+
 	return func(w http.ResponseWriter, req *http.Request) {
-		legacyregistry.Handler().ServeHTTP(w, req)
-		metrics.HandlerFor(registry, metrics.HandlerOpts{}).ServeHTTP(w, req)
+		handler.ServeHTTP(w, req)
 	}, nil
 }
 
@@ -166,7 +174,7 @@ func (c Config) migration(store storage.Interface) error {
 				cpolr := event.Object.(*v1alpha2.ClusterPolicyReport)
 				if cpolr.Annotations != nil {
 					if _, ok := cpolr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					cpolr.Annotations = make(map[string]string)
@@ -180,7 +188,7 @@ func (c Config) migration(store storage.Interface) error {
 				cpolr := event.Object.(*v1alpha2.ClusterPolicyReport)
 				if cpolr.Annotations != nil {
 					if _, ok := cpolr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					cpolr.Annotations = make(map[string]string)
@@ -247,7 +255,7 @@ func (c Config) migration(store storage.Interface) error {
 				polr := event.Object.(*v1alpha2.PolicyReport)
 				if polr.Annotations != nil {
 					if _, ok := polr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					polr.Annotations = make(map[string]string)
@@ -261,7 +269,7 @@ func (c Config) migration(store storage.Interface) error {
 				polr := event.Object.(*v1alpha2.PolicyReport)
 				if polr.Annotations != nil {
 					if _, ok := polr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					polr.Annotations = make(map[string]string)
@@ -327,7 +335,7 @@ func (c Config) migration(store storage.Interface) error {
 				cephr := event.Object.(*reportsv1.ClusterEphemeralReport)
 				if cephr.Annotations != nil {
 					if _, ok := cephr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					cephr.Annotations = make(map[string]string)
@@ -341,7 +349,7 @@ func (c Config) migration(store storage.Interface) error {
 				cephr := event.Object.(*reportsv1.ClusterEphemeralReport)
 				if cephr.Annotations != nil {
 					if _, ok := cephr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					cephr.Annotations = make(map[string]string)
@@ -406,7 +414,7 @@ func (c Config) migration(store storage.Interface) error {
 				ephr := event.Object.(*reportsv1.EphemeralReport)
 				if ephr.Annotations != nil {
 					if _, ok := ephr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					ephr.Annotations = make(map[string]string)
@@ -420,7 +428,7 @@ func (c Config) migration(store storage.Interface) error {
 				ephr := event.Object.(*reportsv1.EphemeralReport)
 				if ephr.Annotations != nil {
 					if _, ok := ephr.Annotations[api.ServedByReportsServerAnnotation]; ok {
-						return
+						continue
 					}
 				} else {
 					ephr.Annotations = make(map[string]string)
