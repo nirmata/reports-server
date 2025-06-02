@@ -145,6 +145,7 @@ func (c Config) migration(store storage.Interface) error {
 			return err
 		}
 	}
+	// jdjdj
 	err = store.SetResourceVersion(cpolrs.ResourceVersion)
 	if err != nil {
 		return err
