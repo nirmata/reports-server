@@ -61,8 +61,6 @@ func (p *ephrdb) List(ctx context.Context, namespace string) ([]*reportsv1.Ephem
 		return nil, fmt.Errorf("ephemeralreport list %q: %v", namespace, err)
 	}
 	defer rows.Close()
-	serverMetrics.UpdateDBRequestTotalMetrics("postgres", "list", "EphemeralReport")
-	serverMetrics.UpdateDBRequestLatencyMetrics("postgres", "list", "EphemeralReport", time.Since(startTime))
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
 			klog.ErrorS(err, "ephemeralreport scan failed")
@@ -78,6 +76,8 @@ func (p *ephrdb) List(ctx context.Context, namespace string) ([]*reportsv1.Ephem
 	}
 
 	klog.Infof("list found length: %d", len(res))
+	serverMetrics.UpdateDBRequestTotalMetrics("postgres", "list", "EphemeralReport")
+	serverMetrics.UpdateDBRequestLatencyMetrics("postgres", "list", "EphemeralReport", time.Since(startTime))
 	return res, nil
 }
 

@@ -61,8 +61,6 @@ func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.Policy
 		return nil, fmt.Errorf("policyreport list %q: %v", namespace, err)
 	}
 	defer rows.Close()
-	serverMetrics.UpdateDBRequestTotalMetrics("postgres", "list", "PolicyReport")
-	serverMetrics.UpdateDBRequestLatencyMetrics("postgres", "list", "PolicyReport", time.Since(startTime))
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
 			klog.ErrorS(err, "policyreport scan failed")
@@ -78,6 +76,8 @@ func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.Policy
 	}
 
 	klog.Infof("list found length: %d", len(res))
+	serverMetrics.UpdateDBRequestTotalMetrics("postgres", "list", "PolicyReport")
+	serverMetrics.UpdateDBRequestLatencyMetrics("postgres", "list", "PolicyReport", time.Since(startTime))
 	return res, nil
 }
 

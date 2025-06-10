@@ -50,7 +50,6 @@ func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, 
 		return nil, fmt.Errorf("clusterephemeralreports list: %v", err)
 	}
 	defer rows.Close()
-
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
 			klog.ErrorS(err, "failed to scan rows")

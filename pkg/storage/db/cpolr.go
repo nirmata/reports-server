@@ -50,8 +50,6 @@ func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, er
 		return nil, fmt.Errorf("clusterpolicyreport list: %v", err)
 	}
 	defer rows.Close()
-	serverMetrics.UpdateDBRequestTotalMetrics("postgres", "list", "ClusterPolicyReport")
-	serverMetrics.UpdateDBRequestLatencyMetrics("postgres", "list", "ClusterPolicyReport", time.Since(startTime))
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
 			klog.ErrorS(err, "failed to scan rows")
@@ -67,6 +65,8 @@ func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, er
 	}
 
 	klog.Infof("list found length: %d", len(res))
+	serverMetrics.UpdateDBRequestTotalMetrics("postgres", "list", "ClusterPolicyReport")
+	serverMetrics.UpdateDBRequestLatencyMetrics("postgres", "list", "ClusterPolicyReport", time.Since(startTime))
 	return res, nil
 }
 
