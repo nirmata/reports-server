@@ -63,12 +63,14 @@ func (p *polrdb) List(ctx context.Context, namespace string) ([]*v1alpha2.Policy
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
+			rows.Close()
 			klog.ErrorS(err, "policyreport scan failed")
 			return nil, fmt.Errorf("policyreport list %q: %v", namespace, err)
 		}
 		var report v1alpha2.PolicyReport
 		err := json.Unmarshal([]byte(jsonb), &report)
 		if err != nil {
+			rows.Close()
 			klog.ErrorS(err, "cannot convert jsonb to policyreport")
 			return nil, fmt.Errorf("policyreport list %q: cannot convert jsonb to policyreport: %v", namespace, err)
 		}

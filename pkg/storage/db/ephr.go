@@ -63,12 +63,14 @@ func (p *ephrdb) List(ctx context.Context, namespace string) ([]*reportsv1.Ephem
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
+			rows.Close()
 			klog.ErrorS(err, "ephemeralreport scan failed")
 			return nil, fmt.Errorf("ephemeralreport list %q: %v", namespace, err)
 		}
 		var report reportsv1.EphemeralReport
 		err := json.Unmarshal([]byte(jsonb), &report)
 		if err != nil {
+			rows.Close()
 			klog.ErrorS(err, "cannot convert jsonb to ephemeralreport")
 			return nil, fmt.Errorf("ephemeralreport list %q: cannot convert jsonb to ephemeralreport: %v", namespace, err)
 		}

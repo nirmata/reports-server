@@ -52,12 +52,14 @@ func (c *cephr) List(ctx context.Context) ([]*reportsv1.ClusterEphemeralReport, 
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
+			rows.Close()
 			klog.ErrorS(err, "failed to scan rows")
 			return nil, fmt.Errorf("clusterephemeralreports list: %v", err)
 		}
 		var report reportsv1.ClusterEphemeralReport
 		err := json.Unmarshal([]byte(jsonb), &report)
 		if err != nil {
+			rows.Close()
 			klog.ErrorS(err, "failed to unmarshal clusterephemeralreports")
 			return nil, fmt.Errorf("clusterephemeralreports list: cannot convert jsonb to clusterephemeralreports: %v", err)
 		}

@@ -52,12 +52,14 @@ func (c *cpolrdb) List(ctx context.Context) ([]*v1alpha2.ClusterPolicyReport, er
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&jsonb); err != nil {
+			rows.Close()
 			klog.ErrorS(err, "failed to scan rows")
 			return nil, fmt.Errorf("clusterpolicyreport list: %v", err)
 		}
 		var report v1alpha2.ClusterPolicyReport
 		err := json.Unmarshal([]byte(jsonb), &report)
 		if err != nil {
+			rows.Close()
 			klog.ErrorS(err, "failed to unmarshal clusterpolicyreport")
 			return nil, fmt.Errorf("clusterpolicyreport list: cannot convert jsonb to clusterpolicyreport: %v", err)
 		}
