@@ -102,11 +102,6 @@ func (p *polrdb) Delete(ctx context.Context, name, namespace string) error {
 		klog.Errorf("entry does not exist k:%s", key)
 		return errors.NewNotFound(utils.PolicyReportsGR, key)
 	} else {
-		// report, err := p.Get(ctx, name, namespace)
-		// if err != nil {
-		// 	klog.ErrorS(err, "failed to get polr")
-		// 	return fmt.Errorf("delete policyreport: %v", err)
-		// }
 		report := v1alpha2.PolicyReport{}
 		p.db.Delete(key)
 		klog.Infof("entry deleted for key:%s", key)

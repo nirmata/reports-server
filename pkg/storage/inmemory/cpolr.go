@@ -94,11 +94,6 @@ func (c *cpolrdb) Delete(ctx context.Context, name string) error {
 		klog.Errorf("entry does not exist k:%s", key)
 		return errors.NewNotFound(utils.ClusterPolicyReportsGR, key)
 	} else {
-		// report, err := c.Get(ctx, name)
-		// if err != nil {
-		// 	klog.ErrorS(err, "failed to get cpolr")
-		// 	return fmt.Errorf("delete clusterpolicyreport: %v", err)
-		// }
 		report := v1alpha2.ClusterPolicyReport{}
 		c.db.Delete(key)
 		klog.Infof("entry deleted for key:%s", key)

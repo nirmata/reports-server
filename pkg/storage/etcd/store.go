@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	reportsv1 "github.com/kyverno/kyverno/api/reports/v1"
 	serverMetrics "github.com/kyverno/reports-server/pkg/server/metrics"
 	storageMetrics "github.com/kyverno/reports-server/pkg/storage/metrics"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -170,12 +169,6 @@ func (o *objectStoreNamespaced[T]) Delete(ctx context.Context, name, namespace s
 	o.Lock()
 	defer o.Unlock()
 
-	// report, err := o.Get(ctx, name, namespace)
-	// if err != nil {
-	// 	klog.ErrorS(err, "failed to get report")
-	// }
-	report := reportsv1.EphemeralReport{}
-
 	startTime := time.Now()
 	key := o.getKey(name, namespace)
 	resp, err := o.etcdclient.Delete(ctx, key)
@@ -188,7 +181,6 @@ func (o *objectStoreNamespaced[T]) Delete(ctx context.Context, name, namespace s
 	if resp.Deleted == 0 {
 		return errors.NewNotFound(o.gr, key)
 	}
-	storageMetrics.UpdatePolicyReportMetrics("etcd", "delete", report, false)
 	return nil
 }
 
