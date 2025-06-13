@@ -288,7 +288,7 @@ spec:
           args:
             - --etcd
             - --etcdSkipTLS
-            - --etcdEndpoints=https://etcd-0.etcd.reports-server:2379,https://etcd-1.etcd.reports-server:2379,https://etcd-2.etcd.reports-server:2379
+            - --etcdEndpoints=http://etcd-0.etcd.reports-server:2379,http://etcd-1.etcd.reports-server:2379,http://etcd-2.etcd.reports-server:2379
             - --cert-dir=/tmp
             - --secure-port=4443
             - --authorization-always-allow-paths=/metrics
