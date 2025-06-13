@@ -113,6 +113,7 @@ jobs:
         run: |
           set -e
           cd ./kyverno/test/conformance/chainsaw/reports && chainsaw test --config ./../../../../../.chainsaw.yaml --exclude-test-regex '^chainsaw$/^admission$/^label'
+        timeout-minutes: 5
       - name: Debug failure
         if: failure()
         uses: ./.github/actions/failure-logs
