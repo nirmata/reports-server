@@ -26,7 +26,7 @@ KIND_VERSION                       := v0.23.0
 KO                                 := $(TOOLS_DIR)/ko
 KO_VERSION                         := v0.14.1
 HELM                               := $(TOOLS_DIR)/helm
-HELM_VERSION                       := v3.15.4
+HELM_VERSION                       := v3.17.3
 TOOLS                              := $(REGISTER_GEN) $(OPENAPI_GEN) $(KIND) $(KO) $(HELM)
 ifeq ($(GOOS), darwin)
 SED                                := gsed
