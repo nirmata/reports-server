@@ -98,11 +98,12 @@ func (e *ephrdb) Delete(ctx context.Context, name, namespace string) error {
 		klog.Errorf("entry does not exist k:%s", key)
 		return errors.NewNotFound(utils.EphemeralReportsGR, key)
 	} else {
-		report, err := e.Get(ctx, name, namespace)
-		if err != nil {
-			klog.ErrorS(err, "failed to get ephr")
-			return fmt.Errorf("delete ephemeralreport: %v", err)
-		}
+		// report, err := e.Get(ctx, name, namespace)
+		// if err != nil {
+		// 	klog.ErrorS(err, "failed to get ephr")
+		// 	return fmt.Errorf("delete ephemeralreport: %v", err)
+		// }
+		report := reportsv1.EphemeralReport{}
 		e.db.Delete(key)
 		klog.Infof("entry deleted for key:%s", key)
 		metrics.UpdatePolicyReportMetrics("etcd", "delete", report, false)

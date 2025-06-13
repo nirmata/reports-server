@@ -106,11 +106,12 @@ func (c *cephrdb) Delete(ctx context.Context, name string) error {
 		klog.Errorf("entry does not exist k:%s", key)
 		return errors.NewNotFound(utils.ClusterEphemeralReportsGR, key)
 	} else {
-		report, err := c.Get(ctx, name)
-		if err != nil {
-			klog.ErrorS(err, "failed to get cephr")
-			return fmt.Errorf("delete clusterephemeralreport: %v", err)
-		}
+		// report, err := c.Get(ctx, name)
+		// if err != nil {
+		// 	klog.ErrorS(err, "failed to get cephr")
+		// 	return fmt.Errorf("delete clusterephemeralreport: %v", err)
+		// }
+		report := reportsv1.ClusterEphemeralReport{}
 		startTime := time.Now()
 		c.db.Delete(key)
 		klog.Infof("entry deleted for key:%s", key)
