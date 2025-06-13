@@ -350,6 +350,7 @@ func (c *cephrStore) listCephr() (*reportsv1.ClusterEphemeralReportList, error) 
 	}
 
 	for _, v := range valList {
+		v.Spec.Results = nil
 		reportList.Items = append(reportList.Items, *v.DeepCopy())
 	}
 

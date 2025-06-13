@@ -370,6 +370,7 @@ func (p *ephrStore) listEphr(namespace string) (*reportsv1.EphemeralReportList, 
 	}
 
 	for _, v := range valList {
+		v.Spec.Results = nil
 		reportList.Items = append(reportList.Items, *v.DeepCopy())
 	}
 

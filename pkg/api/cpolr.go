@@ -349,6 +349,7 @@ func (c *cpolrStore) listCpolr() (*v1alpha2.ClusterPolicyReportList, error) {
 	}
 
 	for _, v := range valList {
+		v.Results = nil
 		reportList.Items = append(reportList.Items, *v.DeepCopy())
 	}
 

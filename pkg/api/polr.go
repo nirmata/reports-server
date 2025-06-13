@@ -370,6 +370,7 @@ func (p *polrStore) listPolr(namespace string) (*v1alpha2.PolicyReportList, erro
 	}
 
 	for _, v := range valList {
+		v.Results = nil
 		reportList.Items = append(reportList.Items, *v.DeepCopy())
 	}
 
