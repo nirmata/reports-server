@@ -40,7 +40,7 @@ $(REGISTER_GEN):
 
 $(OPENAPI_GEN):
 	@echo Install openapi-gen... >&2
-	@GOBIN=$(TOOLS_DIR) go install k8s.io/code-generator/cmd/openapi-gen@$(CODE_GEN_VERSION)
+	@GOBIN=$(TOOLS_DIR) go install k8s.io/kube-openapi/cmd/openapi-gen@latest
 
 $(KIND):
 	@echo Install kind... >&2
