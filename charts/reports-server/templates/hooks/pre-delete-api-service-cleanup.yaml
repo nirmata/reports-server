@@ -1,4 +1,4 @@
-{{- if .Values.apiServicesManagement.enabled -}}
+{{- if .Values.apiServicesManagement.installApiServices.enabled -}}
 {{- if not .Values.templating.enabled -}}
 apiVersion: batch/v1
 kind: Job
