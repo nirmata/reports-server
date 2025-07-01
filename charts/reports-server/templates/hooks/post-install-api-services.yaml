@@ -1,4 +1,4 @@
-{{- if .Values.apiServicesManagement.enabled -}}
+{{- if .Values.apiServicesManagement.migrateReportsServer.enabled -}}
 {{- if not .Values.templating.enabled -}}
 apiVersion: batch/v1
 kind: Job
@@ -15,11 +15,11 @@ spec:
   backoffLimit: 2
   template:
     metadata:
-      {{- with .Values.apiServicesManagement.podAnnotations }}
+      {{- with .Values.chart-hooks.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.apiServicesManagement.podLabels }}
+      {{- with .Values.chart-hooks.podLabels }}
       labels:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -30,20 +30,20 @@ spec:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       restartPolicy: Never
-      {{- with .Values.apiServicesManagement.imagePullSecrets | default .Values.imagePullSecrets }}
+      {{- with .Values.chart-hooks.imagePullSecrets | default .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       containers:
         - name: kubectl
-          image: "{{ .Values.apiServicesManagement.image.registry }}/{{ .Values.apiServicesManagement.image.repository }}:{{ .Values.apiServicesManagement.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.apiServicesManagement.image.pullPolicy }}
+          image: "{{ .Values.chart-hooks.image.registry }}/{{ .Values.chart-hooks.image.repository }}:{{ .Values.chart-hooks.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.chart-hooks.image.pullPolicy }}
           command:
             - /usr/bin/sh
             - '-c'
             - |-
               set -euo pipefail
-              kubectl wait -n {{ $.Release.Namespace }} pod --for=condition=ready -l app.kubernetes.io/name={{ include "reports-server.name" . }} --timeout=60s || true
+              kubectl wait -n {{ $.Release.Namespace }} pod --for=condition=ready -l app.kubernetes.io/name={{ include "reports-server.name" . }} --timeout=120s
               kubectl apply -f - <<EOF
               {
                 "apiVersion": "apiregistration.k8s.io/v1",
@@ -98,29 +98,29 @@ spec:
                 }
               }
               EOF
-          {{- with .Values.apiServicesManagement.securityContext }}
+          {{- with .Values.chart-hooks.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.apiServicesManagement.tolerations | default .Values.tolerations}}
+      {{- with .Values.chart-hooks.tolerations | default .Values.tolerations}}
       tolerations:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.apiServicesManagement.nodeSelector | default .Values.nodeSelector }}
+      {{- with .Values.chart-hooks.nodeSelector | default .Values.nodeSelector }}
       nodeSelector:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- if or .Values.apiServicesManagement.podAntiAffinity .Values.apiServicesManagement.podAffinity .Values.apiServicesManagement.nodeAffinity }}
+      {{- if or .Values.chart-hooks.podAntiAffinity .Values.chart-hooks.podAffinity .Values.chart-hooks.nodeAffinity }}
       affinity:
-        {{- with .Values.apiServicesManagement.podAntiAffinity }}
+        {{- with .Values.chart-hooks.podAntiAffinity }}
         podAntiAffinity:
           {{- tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.apiServicesManagement.podAffinity }}
+        {{- with .Values.chart-hooks.podAffinity }}
         podAffinity:
           {{- tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.apiServicesManagement.nodeAffinity }}
+        {{- with .Values.chart-hooks.nodeAffinity }}
         nodeAffinity:
           {{- tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
