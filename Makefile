@@ -144,6 +144,9 @@ codegen-openapi: $(PACKAGE_SHIM) $(OPENAPI_GEN) ## Generate openapi
 		-i k8s.io/api/core/v1 \
 		-i github.com/kyverno/kyverno/api/reports/v1 \
 		-i github.com/kyverno/kyverno/api/policyreport/v1alpha2 \
+		-i github.com/kyverno/kyverno/api/reports/v1.EphemeralReport \
+		-i github.com/kyverno/kyverno/api/reports/v1.ClusterEphemeralReport \
+		-i github.com/kyverno/kyverno/api/reports/v1.EphemeralReportSpec \
 		-p ./pkg/api/generated/openapi \
 		-O zz_generated.openapi \
 		-h ./.hack/boilerplate.go.txt
