@@ -338,4 +338,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/kyverno/kyverno => github.com/nirmata/enterprise-kyverno v1.13.6-n4k.nirmata.1
+// replace github.com/kyverno/kyverno => github.com/nirmata/enterprise-kyverno v1.13.6-n4k.nirmata.1
