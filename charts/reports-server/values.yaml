@@ -285,7 +285,7 @@ apiServicesManagement:
     enabled: false
 
 
-hookConfigurations:
+jobConfigurations:
   image:
     # -- (string) Image registry
     registry: ghcr.io
