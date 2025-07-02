@@ -3,9 +3,11 @@
 templating:
   enabled: false
 fipsEnabled: false
-cloudnative-pg:
-  crds:
-    create: false
+
+
+# cloudnative-pg:
+#   crds:
+#     create: false
 
 
 # -- Name override
@@ -283,7 +285,7 @@ apiServicesManagement:
     enabled: false
   
 
-chart-hooks:
+hookConfigurations:
   image:
     # -- (string) Image registry
     registry: ghcr.io

@@ -16,30 +16,30 @@ spec:
   activeDeadlineSeconds: 300
   template:
     metadata:
-      {{- with .Values.chart-hooks.podAnnotations }}
+      {{- with .Values.hookConfigurations.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-      {{- with .Values.chart-hooks.podLabels }}
+      {{- with .Values.hookConfigurations.podLabels }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- include "reports-server.labels" . | nindent 8 }}
     spec:
       serviceAccount: {{ include "reports-server.serviceAccountName" . }}
-      {{- with .Values.chart-hooks.podSecurityContext }}
+      {{- with .Values.hookConfigurations.podSecurityContext }}
       securityContext:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       restartPolicy: Never
-      {{- with .Values.chart-hooks.imagePullSecrets | default .Values.imagePullSecrets }}
+      {{- with .Values.hookConfigurations.imagePullSecrets | default .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       containers:
         - name: kubectl
-          image: "{{ .Values.chart-hooks.image.registry }}/{{ .Values.chart-hooks.image.repository }}:{{ .Values.chart-hooks.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.chart-hooks.image.pullPolicy }}
+          image: "{{ .Values.hookConfigurations.image.registry }}/{{ .Values.hookConfigurations.image.repository }}:{{ .Values.hookConfigurations.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.hookConfigurations.image.pullPolicy }}
           command:
             - /usr/bin/sh
             - '-c'
@@ -81,29 +81,29 @@ spec:
               
               # Exit successfully even if some deletions failed - cleanup is best effort during uninstall
               exit 0
-          {{- with .Values.chart-hooks.securityContext }}
+          {{- with .Values.hookConfigurations.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.chart-hooks.tolerations | default .Values.tolerations}}
+      {{- with .Values.hookConfigurations.tolerations | default .Values.tolerations}}
       tolerations:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.chart-hooks.nodeSelector | default .Values.nodeSelector }}
+      {{- with .Values.hookConfigurations.nodeSelector | default .Values.nodeSelector }}
       nodeSelector:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- if or .Values.chart-hooks.podAntiAffinity .Values.chart-hooks.podAffinity .Values.chart-hooks.nodeAffinity }}
+      {{- if or .Values.hookConfigurations.podAntiAffinity .Values.hookConfigurations.podAffinity .Values.hookConfigurations.nodeAffinity }}
       affinity:
-        {{- with .Values.chart-hooks.podAntiAffinity }}
+        {{- with .Values.hookConfigurations.podAntiAffinity }}
         podAntiAffinity:
           {{- tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.chart-hooks.podAffinity }}
+        {{- with .Values.hookConfigurations.podAffinity }}
         podAffinity:
           {{- tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.chart-hooks.nodeAffinity }}
+        {{- with .Values.hookConfigurations.nodeAffinity }}
         nodeAffinity:
           {{- tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
