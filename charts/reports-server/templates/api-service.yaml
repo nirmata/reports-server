@@ -43,4 +43,3 @@ spec:
   versionPriority: 100
 {{- end }}
 {{- end }}
-	
