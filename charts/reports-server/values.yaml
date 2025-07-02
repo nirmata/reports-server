@@ -283,7 +283,7 @@ apiServicesManagement:
   migrateReportsServer:
     # -- Create api services only when reports-server is ready and migration is guaranteed
     enabled: false
-  
+
 
 hookConfigurations:
   image:
