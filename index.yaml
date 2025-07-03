@@ -3,6 +3,26 @@ entries:
   reports-server:
   - apiVersion: v2
     appVersion: v0.1.25
+    created: "2025-07-03T11:07:57.902405957Z"
+    digest: f176bf9a6ac23adc82d2c58a32ed042d979a417fdd0e2f760747ccf0d6a4a083
+    keywords:
+    - kubernetes
+    - policy reports storage
+    - postgresql
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - email: cncf-kyverno-maintainers@lists.cncf.io
+      name: Nirmata
+      url: https://kyverno.io/
+    name: reports-server
+    sources:
+    - https://github.com/nirmata/reports-server
+    type: application
+    urls:
+    - https://nirmata.github.io/reports-server/reports-server-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
+    appVersion: v0.1.25
     created: "2025-07-02T12:24:40.900002339Z"
     digest: d2f07b4ff5c51247fa567a56bcdbd54555898bc3cb3450b73a87c08e8544dfed
     keywords:
@@ -971,4 +991,4 @@ entries:
     urls:
     - https://kyverno.github.io/reports-server/reports-server-0.1.0-alpha.1.tgz
     version: 0.1.0-alpha.1
-generated: "2025-07-02T12:24:40.898860251Z"
+generated: "2025-07-03T11:07:57.900363098Z"
